@@ -10,7 +10,7 @@ using Orchard.Environment.Extensions.Models;
 using Orchard.FileSystems.WebSite;
 using Orchard.Localization.Services;
 
-namespace OrchardPo.Services
+namespace Q42.DbTranslations.Services
 {
 
   [OrchardSuppressDependency("Orchard.Localization.Services.DefaultLocalizedStringManager")]

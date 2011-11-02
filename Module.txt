@@ -1,4 +1,4 @@
-Name: DbTranslations
+Name: Q42.DbTranslations
 AntiForgery: enabled
 Author: Jaap Taal, Lukas van Driel @ Q42
 Website: http://q42.nl/orcharddbtranslations

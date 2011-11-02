@@ -2,7 +2,7 @@
 using Orchard.Environment.Extensions.Models;
 using Orchard.Security.Permissions;
 
-namespace OrchardPo
+namespace Q42.DbTranslations
 {
   public class Permissions : IPermissionProvider
   {

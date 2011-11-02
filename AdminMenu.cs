@@ -2,7 +2,7 @@
 using Orchard.Security;
 using Orchard.UI.Navigation;
 
-namespace OrchardPo
+namespace Q42.DbTranslations
 {
   public class AdminMenu : INavigationProvider
   {
@@ -17,7 +17,7 @@ namespace OrchardPo
 
     private NavigationBuilder BuildViaselectMenu(NavigationBuilder menu)
     {
-      menu.Add(T("Translations"), "0", item => item.Action("Index", "Admin", new { area = "OrchardPo" })
+      menu.Add(T("Translations"), "0", item => item.Action("Index", "Admin", new { area = "Q42.DbTranslations" })
                 .Permission(Permissions.Translate));
       return menu;
     }

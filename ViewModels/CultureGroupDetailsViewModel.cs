@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OrchardPo.ViewModels
+namespace Q42.DbTranslations.ViewModels
 {
   public class CultureGroupDetailsViewModel
   {

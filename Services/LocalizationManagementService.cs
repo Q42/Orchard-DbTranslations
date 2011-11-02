@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Fluent.Zip;
 using Orchard;
-using OrchardPo.Models;
+using Q42.DbTranslations.Models;
 using Path = Fluent.IO.Path;
 
 namespace Vandelay.TranslationManager.Services

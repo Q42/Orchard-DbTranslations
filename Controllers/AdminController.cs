@@ -6,10 +6,10 @@ using System.Linq;
 using Orchard;
 using Orchard.Localization;
 using Orchard.Themes;
-using OrchardPo.Services;
+using Q42.DbTranslations.Services;
 using Vandelay.TranslationManager.Services;
 
-namespace OrchardPo.Controllers
+namespace Q42.DbTranslations.Controllers
 {
   [Themed]
   public class AdminController : Controller
@@ -107,7 +107,7 @@ namespace OrchardPo.Controllers
 
     public ActionResult Download(string culture)
     {
-      var cachePath = Server.MapPath("~/Modules/OrchardPo/Content/orchard." + culture + ".po.zip");
+      var cachePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/orchard." + culture + ".po.zip");
       if (System.IO.File.Exists(cachePath) &&
           DateTime.Now - System.IO.File.GetLastWriteTime(cachePath) < TimeSpan.FromDays(1))
       {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace OrchardPo.Services
+namespace Q42.DbTranslations.Services
 {
   public static class EncodingDetection
   {

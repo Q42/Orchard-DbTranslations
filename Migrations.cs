@@ -1,6 +1,6 @@
 ﻿using Orchard.Data.Migration;
 
-namespace OrchardPo
+namespace Q42.DbTranslations
 {
   public class Migrations : DataMigrationImpl
   {
@@ -29,9 +29,9 @@ namespace OrchardPo
           )
           .CreateForeignKey(
               "FK_Po_Translation_LocalizableString",
-              "OrchardPo", "TranslationRecord",
+              "Q42.DbTranslations", "TranslationRecord",
               new[] { "LocalizableStringRecord_Id" },
-              "OrchardPo", "LocalizableStringRecord",
+              "Q42.DbTranslations", "LocalizableStringRecord",
               new[] { "Id" });
       SchemaBuilder.AlterTable(
           "TranslationRecord",

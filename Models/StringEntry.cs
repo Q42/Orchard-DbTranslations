@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace OrchardPo.Models
+namespace Q42.DbTranslations.Models
 {
   public class StringEntry
   {

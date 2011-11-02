@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace OrchardPo.ViewModels
+namespace Q42.DbTranslations.ViewModels
 {
   public class CultureDetailsViewModel
   {

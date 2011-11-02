@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Web;
-using OrchardPo.ViewModels;
+using Q42.DbTranslations.ViewModels;
 
-namespace OrchardPo.Helpers
+namespace Q42.DbTranslations.Helpers
 {
   public class LocalizationHelpers
   {

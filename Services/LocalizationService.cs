@@ -10,12 +10,12 @@ using Orchard;
 using Orchard.ContentManagement;
 using Orchard.Data;
 using Orchard.Roles.Models;
-using OrchardPo.Models;
-using OrchardPo.ViewModels;
+using Q42.DbTranslations.Models;
+using Q42.DbTranslations.ViewModels;
 using System.Collections.Generic;
 using Orchard.Localization.Services;
 
-namespace OrchardPo.Services
+namespace Q42.DbTranslations.Services
 {
   public interface ILocalizationService : IDependency
   {
@@ -52,7 +52,7 @@ namespace OrchardPo.Services
       {
         var query = session.CreateQuery(@"
                     select s
-                    from OrchardPo.Models.LocalizableStringRecord as s fetch all properties
+                    from Q42.DbTranslations.Models.LocalizableStringRecord as s fetch all properties
                     order by s.Path");
         var currentPath = "";
         var group = default(CultureDetailsViewModel.TranslationGroupViewModel);
@@ -99,8 +99,8 @@ namespace OrchardPo.Services
                 @"  SELECT Localizable.Path,
                         COUNT(Localizable.Id) AS TotalCount,
                         COUNT(Translation.Id) AS TranslatedCount
-                    FROM OrchardPo_LocalizableStringRecord AS Localizable
-                    LEFT OUTER JOIN OrchardPo_TranslationRecord AS Translation
+                    FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
+                    LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
                         ON Localizable.Id = Translation.LocalizableStringRecord_id
                         AND Translation.Culture = :culture
                     GROUP BY Localizable.Path
@@ -132,8 +132,8 @@ namespace OrchardPo.Services
               Localizable.Context,
               Localizable.OriginalLanguageString,
               Translation.Value
-          FROM OrchardPo_LocalizableStringRecord AS Localizable
-          LEFT OUTER JOIN OrchardPo_TranslationRecord AS Translation
+          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
               AND Translation.Culture = :culture
           WHERE Localizable.Path = :path")
@@ -168,8 +168,8 @@ namespace OrchardPo.Services
               Localizable.StringKey,
               Localizable.Context,
               Translation.Value
-          FROM OrchardPo_LocalizableStringRecord AS Localizable
-          INNER JOIN OrchardPo_TranslationRecord AS Translation
+          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          INNER JOIN Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
               AND Translation.Culture = :culture")
           .AddScalar("StringKey", NHibernateUtil.String)

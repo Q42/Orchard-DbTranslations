@@ -1,4 +1,4 @@
-﻿namespace OrchardPo.Models
+﻿namespace Q42.DbTranslations.Models
 {
   public class TranslationRecord
   {

@@ -1,0 +1,49 @@
+﻿@using System.Globalization
+@using OrchardPo.ViewModels
+@model CultureIndexViewModel
+@{
+  Layout.Title = "Localization";
+}
+
+<h2>@T("Orchard Translations")</h2>
+@if (Model.TranslationStates.Count == 0)
+{
+  @T("No translations available.")
+}
+else
+{
+  <table class="items">
+    @foreach (var translation in Model.TranslationStates.OrderBy(c => c.Key))
+    {
+      var culture = CultureInfo.GetCultureInfoByIetfLanguageTag(translation.Key);
+      <tr>
+        <td>
+          @Html.ActionLink(
+              culture.IetfLanguageTag + " - " + culture.NativeName,
+              "Culture",
+              new { culture = culture.Name })
+        </td>
+        <td>
+          @T("{0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
+        </td>
+      </tr>
+    }
+  </table>
+}
+
+@if (Model.CanUpload)
+{
+  <div class="content">
+    <h4>@T("Generate from code"):</h4>
+    @Html.ActionLink("Generate!", "FromSource", new {  })
+  </div>
+  
+  <div class="content">
+    <h4>@T("Upload a new or updated translation file"):</h4>
+    <form action="@Url.Action("Upload")" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryTokenOrchard()
+    <input type="file" class="fileupload" name="pofile" />
+    <input type="submit" class="button" name="submit" value="Upload" />
+    </form>
+  </div>
+}

@@ -1,0 +1,32 @@
+﻿@using System.Globalization
+@using OrchardPo.Helpers
+@using OrchardPo.ViewModels
+@model CultureGroupDetailsViewModel
+@{ Layout.Title = Model.Culture + " Localization"; }
+
+<div class="content">
+  @Html.ActionLink("Download the PO files", "Download", new {culture = Model.Culture}) -
+  @Html.ActionLink("Back to the index", "Index")
+  <h2>@Model.Culture - @(new CultureInfo(Model.Culture).DisplayName)</h2>
+  <table class="items">
+    <tr>
+      <th>@T("Module")</th>
+      <th>@T("Total")</th>
+      <th>@T("Translated")</th>
+      <th>@T("Missing")</th>
+    </tr>
+  @foreach (var group in Model.Groups.Where(g => g.TotalCount > 0).OrderByDescending(g => g.TotalCount - g.TranslationCount)) {
+      <tr>
+        <td>
+          <a href="@Url.Action("Details", new {path = group.Path, culture = Model.Culture})">
+          @LocalizationHelpers.GetPoFileName(group.Path)
+        </a>
+        </td>
+        <td>@group.TotalCount</td>
+        <td>@group.TranslationCount</td>
+        <td>@(group.TotalCount - group.TranslationCount)</td>
+      </tr>
+  }
+  </table>
+
+</div>

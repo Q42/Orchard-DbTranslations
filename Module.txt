@@ -1,0 +1,11 @@
+Name: OrchardPo
+AntiForgery: disabled
+Author: Bertrand Le Roy
+Website: http://orchardproject.net
+Version: 1.3.1
+OrchardVersion: 1.3
+Description: Manage po files from Orchard
+Features:
+    OrchardPo:
+        Description: Manage po files from Orchard. Warning: this module makes direct use of nHibernate database queries and might fail in multi-tenant Orchard instances.
+        Category: Localization

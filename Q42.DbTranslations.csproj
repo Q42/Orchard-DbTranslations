@@ -9,8 +9,8 @@
     <ProjectTypeGuids>{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OrchardPo</RootNamespace>
-    <AssemblyName>OrchardPo</AssemblyName>
+    <RootNamespace>Q42.DbTranslations</RootNamespace>
+    <AssemblyName>Q42.DbTranslations</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <FileUpgradeFlags>

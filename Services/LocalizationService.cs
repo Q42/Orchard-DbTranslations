@@ -14,6 +14,11 @@ using Q42.DbTranslations.Models;
 using Q42.DbTranslations.ViewModels;
 using System.Collections.Generic;
 using Orchard.Localization.Services;
+using Orchard.UI.Admin.Notification;
+using Orchard.UI.Notify;
+using System.Web.Mvc;
+using Orchard.Localization;
+using Orchard.Caching;
 
 namespace Q42.DbTranslations.Services
 {
@@ -26,23 +31,31 @@ namespace Q42.DbTranslations.Services
     void RemoveTranslation(int id, string culture);
     void UnzipPostedFileToDatabase(HttpPostedFileBase file);
     bool IsCultureAllowed(string culture);
+    void ResetCache();
     void SaveStringsToDatabase(IEnumerable<StringEntry> strings);
     CultureGroupDetailsViewModel GetModules(string culture);
     CultureGroupDetailsViewModel GetTranslations(string culture, string path);
     IEnumerable<StringEntry> GetTranslations(string culture);
   }
 
-  public class LocalizationService : ILocalizationService
+  public class LocalizationService : ILocalizationService, INotificationProvider
   {
     private readonly ISessionLocator _sessionLocator;
     private readonly IWorkContextAccessor _wca;
     private readonly ICultureManager _cultureManager;
+    public Localizer T { get; set; }
+    private readonly ICacheManager _cacheManager;
+    private readonly ISignals _signals;
 
-    public LocalizationService(ISessionLocator sessionLocator, IWorkContextAccessor wca, ICultureManager cultureManager)
+    public LocalizationService(ISessionLocator sessionLocator, IWorkContextAccessor wca, ICultureManager cultureManager,
+      ICacheManager cacheManager, ISignals signals)
     {
+      _signals = signals;
+      T = NullLocalizer.Instance;
       _sessionLocator = sessionLocator;
       _wca = wca;
       _cultureManager = cultureManager;
+      _cacheManager = cacheManager;
     }
 
     public CultureDetailsViewModel GetCultureDetailsViewModel(string culture)
@@ -160,11 +173,14 @@ namespace Q42.DbTranslations.Services
 
     public IEnumerable<StringEntry> GetTranslations(string culture)
     {
-      using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+      var wc = _wca.GetContext();
       {
-        // haalt alle mogelijke strings en description en hun vertaling in culture op
-        var paths = session.CreateSQLQuery(
-          @"  SELECT 
+        var _sessionLocator = wc.Resolve<ISessionLocator>();
+        using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+        {
+          // haalt alle mogelijke strings en description en hun vertaling in culture op
+          var paths = session.CreateSQLQuery(
+            @"  SELECT 
               Localizable.StringKey,
               Localizable.Context,
               Translation.Value
@@ -172,17 +188,18 @@ namespace Q42.DbTranslations.Services
           INNER JOIN Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
               AND Translation.Culture = :culture")
-          .AddScalar("StringKey", NHibernateUtil.String)
-          .AddScalar("Context", NHibernateUtil.String)
-          .AddScalar("Value", NHibernateUtil.String)
-          .SetParameter("culture", culture);
-        return paths.List<object[]>()
-            .Select(t => new StringEntry
-            {
-              Key = (string)t[0],
-              Context = (string)t[1],
-              Translation = (string)t[2]
-            }).ToList();
+            .AddScalar("StringKey", NHibernateUtil.String)
+            .AddScalar("Context", NHibernateUtil.String)
+            .AddScalar("Value", NHibernateUtil.String)
+            .SetParameter("culture", culture);
+          return paths.List<object[]>()
+              .Select(t => new StringEntry
+              {
+                Key = (string)t[0],
+                Context = (string)t[1],
+                Translation = (string)t[2]
+              }).ToList();
+        }
       }
     }
  
@@ -218,6 +235,7 @@ namespace Q42.DbTranslations.Services
             var id = currentId;
             var context = currentContext;
             //SaveStringToDatabase(session, path, context, id, currentOriginal, culture, line);
+            SetCacheInvalid();
           }
         }
       }
@@ -282,6 +300,8 @@ namespace Q42.DbTranslations.Services
         session.SaveOrUpdate(translatedString);
         session.SaveOrUpdate(translation);
       }
+
+      SetCacheInvalid();
     }
 
     public byte[] GetZipBytes(string culture)
@@ -379,6 +399,8 @@ namespace Q42.DbTranslations.Services
           translation.Value = value;
           session.SaveOrUpdate(translation);
         }
+
+        SetCacheInvalid();
       }
     }
 
@@ -393,6 +415,8 @@ namespace Q42.DbTranslations.Services
           translation.LocalizableStringRecord.Translations.Remove(translation);
           session.Delete("Translation", translation);
         }
+
+        SetCacheInvalid();
       }
     }
 
@@ -427,6 +451,38 @@ namespace Q42.DbTranslations.Services
       var ctx = _wca.GetContext();
       var rolesPart = ctx.CurrentUser.As<UserRolesPart>();
       return (rolesPart != null && rolesPart.Roles.Contains(culture));
+    }
+
+    public IEnumerable<NotifyEntry> GetNotifications()
+    {
+      if (!IsCacheValid())
+      {
+        var request = _wca.GetContext().HttpContext.Request;
+        UrlHelper urlHelper = new UrlHelper(request.RequestContext);
+        var currentUrl = request.Url.PathAndQuery;
+
+        yield return new NotifyEntry
+        {
+          Message = T("Translation cache needs to be flushed. <a href=\"{0}\">Click here to flush!</a>", urlHelper.Action("FlushCache", "Admin", new { area = "Q42.DbTranslations", redirectUrl = currentUrl })),
+          Type = NotifyType.Warning
+        };
+      }
+    }
+
+    public void ResetCache()
+    {
+      _signals.Trigger("culturesChanged");
+      _wca.GetContext().HttpContext.Application.Remove("q42TranslationsDirty");
+    }
+
+    private void SetCacheInvalid()
+    {
+      _wca.GetContext().HttpContext.Application["q42TranslationsDirty"] = true;
+    }
+
+    private bool IsCacheValid()
+    {
+      return !_wca.GetContext().HttpContext.Application.AllKeys.Contains("q42TranslationsDirty");
     }
   }
 }

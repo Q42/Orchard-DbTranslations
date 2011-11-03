@@ -8,6 +8,7 @@ using Orchard.Localization;
 using Orchard.Themes;
 using Q42.DbTranslations.Services;
 using Vandelay.TranslationManager.Services;
+using Orchard.Caching;
 
 namespace Q42.DbTranslations.Controllers
 {
@@ -22,7 +23,8 @@ namespace Q42.DbTranslations.Controllers
 
     public AdminController(
         ILocalizationService localizationService,
-        IOrchardServices services, ILocalizationManagementService managementService)
+        IOrchardServices services, 
+      ILocalizationManagementService managementService)
     {
       _localizationService = localizationService;
       Services = services;
@@ -86,6 +88,7 @@ namespace Q42.DbTranslations.Controllers
       {
         return new HttpUnauthorizedResult();
       }
+
       _localizationService.UpdateTranslation(id, culture, value);
       return new JsonResult { Data = value };
     }
@@ -105,6 +108,11 @@ namespace Q42.DbTranslations.Controllers
       return new JsonResult { Data = null };
     }
 
+    /// <summary>
+    /// caches and serves, because plain serving doesn't work :(
+    /// </summary>
+    /// <param name="culture"></param>
+    /// <returns></returns>
     public ActionResult Download(string culture)
     {
       var cachePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/orchard." + culture + ".po.zip");
@@ -115,10 +123,19 @@ namespace Q42.DbTranslations.Controllers
       }
       byte[] zipBytes = _localizationService.GetZipBytes(culture);
       System.IO.File.WriteAllBytes(cachePath, zipBytes);
+      // todo: hij schrijft een goed bestand naar schijf en levert een corrupt bestand op
       return new FileContentResult(zipBytes, "application/zip")
       {
         FileDownloadName = "orchard." + culture + ".po.zip"
       };
+    }
+
+    public ActionResult FlushCache(string redirectUrl)
+    {
+      _localizationService.ResetCache();
+      if (!string.IsNullOrEmpty(redirectUrl))
+        return new RedirectResult(redirectUrl);
+      return RedirectToAction("Index");
     }
 
     public ActionResult FromSource()
@@ -130,7 +147,7 @@ namespace Q42.DbTranslations.Controllers
       //{
       //  Response.Write("<pre>" + string.Join("; ", t.Path, t.Context, t.Key, t.Culture, t.English, t.Translation, t.Used) + "</pre>");
       //}
-      return new EmptyResult();
+      return RedirectToAction("Index");
     }
   }
 }

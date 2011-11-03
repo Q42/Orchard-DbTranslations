@@ -11,6 +11,10 @@ using Orchard.Caching;
 using Q42.DbTranslations.Models;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using Orchard.UI.Notify;
+using System.Text.RegularExpressions;
+using System.Net;
 
 namespace Q42.DbTranslations.Controllers
 {
@@ -62,27 +66,98 @@ namespace Q42.DbTranslations.Controllers
       return View(model);
     }
 
-    public ActionResult ImportCachedPo(string culture)
+    private readonly Regex cultureRegex = new Regex(@"\\App_Data\\Localization\\(\w{2}(-\w{2,})*)\\orchard\..*");
+
+    /// <summary>
+    /// Scans the site for *.po files and imports them into database
+    /// </summary>
+    /// <param name="culture"></param>
+    /// <returns></returns>
+    public ActionResult ImportCurrentPos()
     {
       if (!Services.Authorizer.Authorize(
           Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
 
-      var filePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/cache/orchard." + culture + ".po.zip");
-      var file = new FileInfo(filePath);
-      if (file.Exists)
+      List<StringEntry> strings = new List<StringEntry>();
+      var files = Directory.GetFiles(Server.MapPath("~"), "*.po", SearchOption.AllDirectories);
+      foreach (var file in files)
       {
-        var strings = _localizationService.GetTranslations(file).ToList();
-        _localizationService.SaveStringsToDatabase(strings);
-        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations in {1}", strings.Count, culture));
+        var match = cultureRegex.Match(file);
+        if (!match.Success || match.Groups.Count < 2)
+          throw new Exception("Cannot find culture in path " + file);
+        string culture = match.Groups[1].Value;
+        string path = new Fluent.IO.Path(file).MakeRelativeTo(new Fluent.IO.Path(Server.MapPath("~"))).ToString().Replace('\\', '/');
+
+        strings.AddRange(_localizationService.TranslateFile(path, System.IO.File.ReadAllText(file, Encoding.UTF8), culture));
       }
-      else
-      {
-        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Warning, T("File could not be found: {0}", filePath));
-      }
-      
+
+      //return Log(strings);
+      _localizationService.SaveStringsToDatabase(strings);
+      Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
+      _localizationService.ResetCache();
       return RedirectToAction("Index");
     }
+
+    private ActionResult Log(IEnumerable<StringEntry> strings)
+    {
+      foreach (var t in strings)
+      {
+        Response.Write("<pre>" + string.Join("\n",
+          "Path: " + t.Path,
+          "Context: " + t.Context,
+          "Key: " + t.Key,
+          "English: " + t.English,
+          t.Culture + ": " + t.Translation) + "</pre>");
+      }
+      return new EmptyResult();
+    }
+
+    /// <summary>
+    /// downloads the po zip from orchardproject.net and imports into database
+    /// </summary>
+    /// <param name="culture"></param>
+    /// <returns></returns>
+    public ActionResult ImportLiveOrchardPo(string culture)
+    {
+      IEnumerable<StringEntry> strings;
+      var url = "http://www.orchardproject.net/Localize/download/" + culture;
+      var req = HttpWebRequest.Create(url);
+      using (var stream = req.GetResponse().GetResponseStream())
+        strings = _localizationService.GetTranslationsFromZip(stream).ToList();
+      //return Log(strings);
+      _localizationService.SaveStringsToDatabase(strings);
+      _localizationService.ResetCache();
+      return RedirectToAction("Index");
+    }
+
+    //public ActionResult ImportCachedPo(string culture)
+    //{
+    //  if (!Services.Authorizer.Authorize(
+    //      Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
+    //    return new HttpUnauthorizedResult();
+
+    //  var filePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/cache/orchard." + culture + ".po.zip");
+    //  var file = new FileInfo(filePath);
+    //  if (file.Exists)
+    //  {
+    //    List<StringEntry> strings;
+    //    using (var stream = file.OpenRead())
+    //    {
+    //      strings = _localizationService.GetTranslationsFromZip(stream).ToList();
+    //    }
+    //    //return Log(strings);
+    //    _localizationService.SaveStringsToDatabase(strings);
+    //    Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations in {1}", strings.Count, culture));
+    //  }
+    //  else
+    //  {
+    //    Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Warning, T("File could not be found: {0}", filePath));
+    //  }
+
+    //  _localizationService.ResetCache();
+    //  return RedirectToAction("Index");
+    //}
 
     [HttpPost]
     public ActionResult Upload()
@@ -96,23 +171,15 @@ namespace Q42.DbTranslations.Controllers
           from string fileName in Request.Files
           select Request.Files[fileName])
       {
-        strings.AddRange(_localizationService.GetTranslations(file));
+        using (var stream = file.InputStream)
+          strings.AddRange(_localizationService.GetTranslationsFromZip(stream));
       }
 
-      //foreach (var t in strings)
-      //{
-      //  Response.Write("<pre>" + string.Join("\n", 
-      //    "Path: " + t.Path,
-      //    "Context: " + t.Context,
-      //    "Key: " + t.Key,
-      //    "English: " + t.English,
-      //    t.Culture + ": " + t.Translation) + "</pre>");
-      //}
-      //return new EmptyResult();
-
+      //return Log(strings);
       _localizationService.SaveStringsToDatabase(strings);
       Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
 
+      _localizationService.ResetCache();
       return RedirectToAction("Index");
     }
 
@@ -181,19 +248,15 @@ namespace Q42.DbTranslations.Controllers
     public ActionResult FromSource(string culture)
     {
       var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~")).ToList();
+      //return Log(translations);
       _localizationService.SaveStringsToDatabase(translations);
-
-      //Response.Write("done: " + translations.Count());
-      //foreach (var t in translations)
-      //{
-      //  Response.Write("<pre>" + string.Join("; ", t.Path, t.Context, t.Key, t.Culture, t.English, t.Translation, t.Used) + "</pre>");
-      //}
 
       Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
 
       if (!string.IsNullOrEmpty(culture))
-        ImportCachedPo(culture);
+        ImportLiveOrchardPo(culture);
 
+      _localizationService.ResetCache();
       return RedirectToAction("Index");
     }
   }

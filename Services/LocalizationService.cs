@@ -29,10 +29,10 @@ namespace Q42.DbTranslations.Services
     CultureIndexViewModel GetCultures();
     void UpdateTranslation(int id, string culture, string value);
     void RemoveTranslation(int id, string culture);
-    IEnumerable<StringEntry> GetTranslations(HttpPostedFileBase file);
-    IEnumerable<StringEntry> GetTranslations(FileInfo file);
+    IEnumerable<StringEntry> GetTranslationsFromZip(Stream stream);
     bool IsCultureAllowed(string culture);
     void ResetCache();
+    IEnumerable<StringEntry> TranslateFile(string path, string content, string culture);
     void SaveStringsToDatabase(IEnumerable<StringEntry> strings);
     CultureGroupDetailsViewModel GetModules(string culture);
     CultureGroupDetailsViewModel GetTranslations(string culture, string path);
@@ -203,9 +203,9 @@ namespace Q42.DbTranslations.Services
         }
       }
     }
- 
 
-    private IEnumerable<StringEntry> TranslateFile(ISession session, string path, string content, string culture)
+
+    public IEnumerable<StringEntry> TranslateFile(string path, string content, string culture)
     {
       string currentContext = null;
       string currentOriginal = null;
@@ -429,54 +429,23 @@ namespace Q42.DbTranslations.Services
       }
     }
 
-
-    public IEnumerable<StringEntry> GetTranslations(FileInfo file)
+    public IEnumerable<StringEntry> GetTranslationsFromZip(Stream stream)
     {
-      using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+      var zip = new ZipInputStream(stream);
+      ZipEntry zipEntry;
+      while ((zipEntry = zip.GetNextEntry()) != null)
       {
-        using (var stream = file.OpenRead())
+        if (zipEntry.IsFile)
         {
-          var zip = new ZipInputStream(stream);
-          ZipEntry zipEntry;
-          while ((zipEntry = zip.GetNextEntry()) != null)
-          {
-            if (zipEntry.IsFile)
-            {
-              var entrySize = (int)zipEntry.Size;
-              // Yeah yeah, but only a handful of people have upload rights here for the moment.
-              var entryBytes = new byte[entrySize];
-              zip.Read(entryBytes, 0, entrySize);
-              var content = entryBytes.ToStringUsingEncoding();
-              var cultureName = Path.GetFileName(Path.GetDirectoryName(zipEntry.Name));
-              var culture = cultureName;
-              foreach (var se in TranslateFile(session, zipEntry.Name, content, culture))
-                yield return se;
-            }
-          }
-        }
-      }
-    }
-
-    public IEnumerable<StringEntry> GetTranslations(HttpPostedFileBase file)
-    {
-      using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
-      {
-        var zip = new ZipInputStream(file.InputStream);
-        ZipEntry zipEntry;
-        while ((zipEntry = zip.GetNextEntry()) != null)
-        {
-          if (zipEntry.IsFile)
-          {
-            var entrySize = (int)zipEntry.Size;
-            // Yeah yeah, but only a handful of people have upload rights here for the moment.
-            var entryBytes = new byte[entrySize];
-            zip.Read(entryBytes, 0, entrySize);
-            var content = entryBytes.ToStringUsingEncoding();
-            var cultureName = Path.GetFileName(Path.GetDirectoryName(zipEntry.Name));
-            var culture = cultureName;
-            foreach (var se in TranslateFile(session, zipEntry.Name, content, culture))
-              yield return se;
-          }
+          var entrySize = (int)zipEntry.Size;
+          // Yeah yeah, but only a handful of people have upload rights here for the moment.
+          var entryBytes = new byte[entrySize];
+          zip.Read(entryBytes, 0, entrySize);
+          var content = entryBytes.ToStringUsingEncoding();
+          var cultureName = Path.GetFileName(Path.GetDirectoryName(zipEntry.Name));
+          var culture = cultureName;
+          foreach (var se in TranslateFile(zipEntry.Name, content, culture))
+            yield return se;
         }
       }
     }

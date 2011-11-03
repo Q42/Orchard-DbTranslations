@@ -2,16 +2,27 @@
 @using Q42.DbTranslations.ViewModels
 @model CultureIndexViewModel
 @{
-  Layout.Title = "Localization";
+  Layout.Title = "Database translations";
 }
 
-<h2>@T("Orchard Translations")</h2>
 @if (Model.TranslationStates.Count == 0)
 {
   @T("No translations available.")
 }
 else
 {
+  
+  if (Model.NumberOfStringsInDefaultCulture == 0)
+  { 
+    <div class="content">
+      <h2>@T("Import existing *.po files")</h2>
+      <p>@T("Just installed this module, but you already have translation po files installed? Import them into the database!")</p>
+      @Html.ActionLink("Import!", "ImportCurrentPos", null, new { @class = "button" })
+    </div>
+    <p>&nbsp;</p>
+  }
+  
+  <h2>@T("Orchard Translations")</h2>
   <table class="items">
     @foreach (var translation in Model.TranslationStates.OrderBy(c => c.Key))
     {
@@ -34,7 +45,7 @@ else
           {
             @T("Only {0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
             <br />
-            <a href="@Url.Action("ImportCachedPo", new { culture = culture })">@T("Click here to pre-fill the database using a cached *.po file.")</a>
+            <a href="@Url.Action("ImportLiveOrchardPo", new { culture = culture })">@T("Click here to pre-fill the database using a *.po.zip file from www.orchardproject.net.")</a>
           }
           else
           {

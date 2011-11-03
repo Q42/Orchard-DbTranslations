@@ -11,20 +11,45 @@
 { 
   <script>
   //<![CDATA[
-    $(window).load(function () {
-      $('#translations input, #translations textarea').change(function (evt) {
+  	$(window).load(function () {
+  		$('#translations input, #translations textarea').change(function (evt) {
 
-        // save new value to database
-        var newValue = $(this).val();
-        var url = "/Admin/localize/update";
-        var postdata = { culture : '@Model.Culture', id : $(this).data('id'), value : newValue, __RequestVerificationToken : $('input[name=__RequestVerificationToken]').val() }
-        $.post(url, postdata, onsuccess).error(function() { alert("error"); });
+  			// save new value to database
+  			var newValue = $(this).val();
+  			var url = "/Admin/localize/update";
+  			var postdata = { culture: '@Model.Culture', id: $(this).data('id'), value: newValue, __RequestVerificationToken: $('input[name=__RequestVerificationToken]').val() }
+  			$.post(url, postdata, onsuccess).error(function () { alert("error"); });
 
-      });
-    });
+  		});
+  	});
+
+  	//	Show the defaults in the input fields if they are set
+  	$('.items').find('td').each(function (i, e) {
+  		if ($(e).html() != $(e).attr('title')) {
+  			$(e).next().find('input').attr('placeholder', $(e).attr('title'));
+  		}
+  	});
+
+  	function indicateEmptyCells() {
+  		console.log('indicating empty cells');
+  		$('.items').find('input').each(function (i, e) {
+  			if ($(e).val() == '' && $(e).attr('placeholder') == undefined) {
+  				$(e).css('background-color', '#ffaaaa');
+  			} else {
+  				$(e).css('background-color', 'white');
+  			}
+  		});
+		}
+
+		indicateEmptyCells();
+		$('.items').find('input').each(function (i, e) {
+			$(e).keyup(indicateEmptyCells);
+		});
+
 
     function onsuccess(data, textStatus, jqXHR) {
-      // todo vinkie
+    	// todo vinkie
+			indicateEmptyCells();
     }
   //]]>
   </script>

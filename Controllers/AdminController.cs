@@ -75,7 +75,7 @@ namespace Q42.DbTranslations.Controllers
       {
         var strings = _localizationService.GetTranslations(file).ToList();
         _localizationService.SaveStringsToDatabase(strings);
-        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
+        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations in {1}", strings.Count, culture));
       }
       else
       {
@@ -184,16 +184,17 @@ namespace Q42.DbTranslations.Controllers
       var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~")).ToList();
       _localizationService.SaveStringsToDatabase(translations);
 
-      if (!string.IsNullOrEmpty(culture))
-        ImportCachedPo(culture);
-
-      Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
-
       //Response.Write("done: " + translations.Count());
       //foreach (var t in translations)
       //{
       //  Response.Write("<pre>" + string.Join("; ", t.Path, t.Context, t.Key, t.Culture, t.English, t.Translation, t.Used) + "</pre>");
       //}
+
+      Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
+
+      if (!string.IsNullOrEmpty(culture))
+        ImportCachedPo(culture);
+
       return RedirectToAction("Index");
     }
   }

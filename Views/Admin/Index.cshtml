@@ -19,12 +19,27 @@ else
       <tr>
         <td>
           @Html.ActionLink(
-              culture.IetfLanguageTag + " - " + culture.NativeName,
+              culture.IetfLanguageTag + " - " + culture.DisplayName,
               "Culture",
               new { culture = culture.Name })
         </td>
         <td>
-          @T("{0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
+          @if (Model.NumberOfStringsInDefaultCulture < 200)
+          {
+            @T("There are only {0} translatable strings. This doesn't seem to be enough to run all of Orchard.", Model.NumberOfStringsInDefaultCulture)
+            <br />
+            <a href="@Url.Action("FromSource", new { culture = culture })">@T("Click here to pre-fill the database using generate from code and a cached *.po file.")</a>
+          }
+          else if (translation.Value.NumberOfTranslatedStrings < 10)
+          {
+            @T("Only {0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
+            <br />
+            <a href="@Url.Action("ImportCachedPo", new { culture = culture })">@T("Click here to pre-fill the database using a cached *.po file.")</a>
+          }
+          else
+          {
+            @T("{0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
+          }
         </td>
       </tr>
     }
@@ -33,13 +48,19 @@ else
 
 @if (Model.CanUpload)
 {
-  <div class="content">
-    <h4>@T("Generate from code"):</h4>
-    @Html.ActionLink("Generate!", "FromSource", new {  })
-  </div>
+  <p>&nbsp;</p>
   
   <div class="content">
-    <h4>@T("Upload a new or updated translation file"):</h4>
+    <h2>@T("Generate from code")</h2>
+    <p>@T("When the sourcecode gets updated and new translations get added, these new translations need to be added to the database. This option only adds non-existant translations to the database. It can do no harm!")</p>
+    @Html.ActionLink("Generate!", "FromSource", null, new { @class = "button" })
+  </div>
+  
+  <p>&nbsp;</p>
+  
+  <div class="content">
+    <h2>@T("Upload a new or updated translation file"):</h2>
+    <p>@T("The community is constantly adding new languages and translations, downloadable at <a target=\"_blank\" href=\"http://www.orchardproject.net/localize\">orchardproject.net/localize</a>. You can import the newest version of these *.po files here. Existing translations will not be altered, only new translations will be added. It can do no harm!")</p>
     <form action="@Url.Action("Upload")" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryTokenOrchard()
     <input type="file" class="fileupload" name="pofile" />

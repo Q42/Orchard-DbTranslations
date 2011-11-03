@@ -9,6 +9,9 @@ using Orchard.Themes;
 using Q42.DbTranslations.Services;
 using Vandelay.TranslationManager.Services;
 using Orchard.Caching;
+using Q42.DbTranslations.Models;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Q42.DbTranslations.Controllers
 {
@@ -23,7 +26,7 @@ namespace Q42.DbTranslations.Controllers
 
     public AdminController(
         ILocalizationService localizationService,
-        IOrchardServices services, 
+        IOrchardServices services,
       ILocalizationManagementService managementService)
     {
       _localizationService = localizationService;
@@ -34,7 +37,7 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult Index()
     {
-      var model = _localizationService.GetExistingTranslationCultures();
+      var model = _localizationService.GetCultures();
       model.CanUpload = Services.Authorizer.Authorize(Permissions.UploadTranslation);
       return View(model);
     }
@@ -60,6 +63,28 @@ namespace Q42.DbTranslations.Controllers
       return View(model);
     }
 
+    public ActionResult ImportCachedPo(string culture)
+    {
+      if (!Services.Authorizer.Authorize(
+          Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
+        return new HttpUnauthorizedResult();
+
+      var filePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/cache/orchard." + culture + ".po.zip");
+      var file = new FileInfo(filePath);
+      if (file.Exists)
+      {
+        var strings = _localizationService.GetTranslations(file).ToList();
+        _localizationService.SaveStringsToDatabase(strings);
+        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
+      }
+      else
+      {
+        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Warning, T("File could not be found: {0}", filePath));
+      }
+      
+      return RedirectToAction("Index");
+    }
+
     [HttpPost]
     public ActionResult Upload()
     {
@@ -67,12 +92,28 @@ namespace Q42.DbTranslations.Controllers
           Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
 
+      var strings = new List<StringEntry>();
       foreach (var file in
           from string fileName in Request.Files
           select Request.Files[fileName])
       {
-        _localizationService.UnzipPostedFileToDatabase(file);
+        strings.AddRange(_localizationService.GetTranslations(file));
       }
+
+      //foreach (var t in strings)
+      //{
+      //  Response.Write("<pre>" + string.Join("\n", 
+      //    "Path: " + t.Path,
+      //    "Context: " + t.Context,
+      //    "Key: " + t.Key,
+      //    "English: " + t.English,
+      //    t.Culture + ": " + t.Translation) + "</pre>");
+      //}
+      //return new EmptyResult();
+
+      _localizationService.SaveStringsToDatabase(strings);
+      Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
+
       return RedirectToAction("Index");
     }
 
@@ -138,11 +179,17 @@ namespace Q42.DbTranslations.Controllers
       return RedirectToAction("Index");
     }
 
-    public ActionResult FromSource()
-    { 
-      var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~"));
+    public ActionResult FromSource(string culture)
+    {
+      var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~")).ToList();
       _localizationService.SaveStringsToDatabase(translations);
-      Response.Write("done: " + translations.Count());
+
+      if (!string.IsNullOrEmpty(culture))
+        ImportCachedPo(culture);
+
+      Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
+
+      //Response.Write("done: " + translations.Count());
       //foreach (var t in translations)
       //{
       //  Response.Write("<pre>" + string.Join("; ", t.Path, t.Context, t.Key, t.Culture, t.English, t.Translation, t.Used) + "</pre>");

@@ -26,10 +26,11 @@ namespace Q42.DbTranslations.Services
   {
     CultureDetailsViewModel GetCultureDetailsViewModel(string culture);
     byte[] GetZipBytes(string culture);
-    CultureIndexViewModel GetExistingTranslationCultures();
+    CultureIndexViewModel GetCultures();
     void UpdateTranslation(int id, string culture, string value);
     void RemoveTranslation(int id, string culture);
-    void UnzipPostedFileToDatabase(HttpPostedFileBase file);
+    IEnumerable<StringEntry> GetTranslations(HttpPostedFileBase file);
+    IEnumerable<StringEntry> GetTranslations(FileInfo file);
     bool IsCultureAllowed(string culture);
     void ResetCache();
     void SaveStringsToDatabase(IEnumerable<StringEntry> strings);
@@ -204,7 +205,7 @@ namespace Q42.DbTranslations.Services
     }
  
 
-    private void CopyFileToDatabase(ISession session, string path, string content, string culture)
+    private IEnumerable<StringEntry> TranslateFile(ISession session, string path, string content, string culture)
     {
       string currentContext = null;
       string currentOriginal = null;
@@ -234,8 +235,19 @@ namespace Q42.DbTranslations.Services
           {
             var id = currentId;
             var context = currentContext;
-            //SaveStringToDatabase(session, path, context, id, currentOriginal, culture, line);
-            SetCacheInvalid();
+            var translation = line.Substring(8, line.Length - 9);
+            if (!string.IsNullOrEmpty(translation))
+            {
+              yield return new StringEntry
+              {
+                Context = context,
+                Path = path,
+                Culture = culture,
+                Key = currentId,
+                English = currentOriginal,
+                Translation = translation
+              };
+            }
           }
         }
       }
@@ -282,7 +294,7 @@ namespace Q42.DbTranslations.Services
         session.SaveOrUpdate(translatedString);
       }
 
-      if (!string.IsNullOrEmpty(input.Culture))
+      if (!string.IsNullOrEmpty(input.Culture) && !string.IsNullOrEmpty(input.Translation))
       {
         var translation =
             (from t in translatedString.Translations
@@ -292,11 +304,8 @@ namespace Q42.DbTranslations.Services
                Culture = input.Culture,
                Value = input.Translation
              };
-        if (translation.LocalizableStringRecord == null &&
-            !String.IsNullOrWhiteSpace(translation.Value))
-        {
+        if (translation.LocalizableStringRecord == null)
           translatedString.AddTranslation(translation);
-        }
         session.SaveOrUpdate(translatedString);
         session.SaveOrUpdate(translation);
       }
@@ -337,7 +346,7 @@ namespace Q42.DbTranslations.Services
       return stream.ToArray();
     }
 
-    public CultureIndexViewModel GetExistingTranslationCultures()
+    public CultureIndexViewModel GetCultures()
     {
       var model = new CultureIndexViewModel();
 
@@ -420,7 +429,35 @@ namespace Q42.DbTranslations.Services
       }
     }
 
-    public void UnzipPostedFileToDatabase(HttpPostedFileBase file)
+
+    public IEnumerable<StringEntry> GetTranslations(FileInfo file)
+    {
+      using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+      {
+        using (var stream = file.OpenRead())
+        {
+          var zip = new ZipInputStream(stream);
+          ZipEntry zipEntry;
+          while ((zipEntry = zip.GetNextEntry()) != null)
+          {
+            if (zipEntry.IsFile)
+            {
+              var entrySize = (int)zipEntry.Size;
+              // Yeah yeah, but only a handful of people have upload rights here for the moment.
+              var entryBytes = new byte[entrySize];
+              zip.Read(entryBytes, 0, entrySize);
+              var content = entryBytes.ToStringUsingEncoding();
+              var cultureName = Path.GetFileName(Path.GetDirectoryName(zipEntry.Name));
+              var culture = cultureName;
+              foreach (var se in TranslateFile(session, zipEntry.Name, content, culture))
+                yield return se;
+            }
+          }
+        }
+      }
+    }
+
+    public IEnumerable<StringEntry> GetTranslations(HttpPostedFileBase file)
     {
       using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
       {
@@ -437,7 +474,8 @@ namespace Q42.DbTranslations.Services
             var content = entryBytes.ToStringUsingEncoding();
             var cultureName = Path.GetFileName(Path.GetDirectoryName(zipEntry.Name));
             var culture = cultureName;
-            CopyFileToDatabase(session, zipEntry.Name, content, culture);
+            foreach (var se in TranslateFile(session, zipEntry.Name, content, culture))
+              yield return se;
           }
         }
       }

@@ -1,4 +1,9 @@
-﻿using Orchard.Data.Migration;
+﻿using System.Data;
+using Orchard.ContentManagement;
+using Orchard.ContentManagement.MetaData;
+using Orchard.Core.Contents.Extensions;
+using Orchard.Data.Migration;
+using Q42.DbTranslations.Models;
 
 namespace Q42.DbTranslations
 {
@@ -40,5 +45,18 @@ namespace Q42.DbTranslations
               "LocalizableStringRecord_Id"));
       return 1;
     }
+
+    public int UpdateFrom1()
+    {
+      SchemaBuilder.CreateTable(typeof(AdminCultureSettingsPartRecord).Name, table => table
+        .ContentPartRecord()
+        .Column("AdminCulture", DbType.String)
+      );
+
+      ContentDefinitionManager.AlterPartDefinition(typeof(AdminCultureSettingsPartRecord).Name, part => part.Attachable(false));
+
+      return 2;
+    }
+
   }
 }

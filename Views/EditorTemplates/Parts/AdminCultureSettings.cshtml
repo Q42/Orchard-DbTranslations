@@ -1,0 +1,9 @@
+﻿@model Q42.DbTranslations.Models.AdminCultureSettingsPart
+<fieldset>
+  <div>
+    @Html.LabelFor(m => m.AdminCulture, @T("Admin culture (e.g. nl-NL)"))
+    @Html.EditorFor(m => m.AdminCulture)
+    @Html.ValidationMessageFor(m => m.AdminCulture, "*")
+    <span class="hint">@T("Does not have to be installed as site culture, as long as the translations are available via Po files or Q42.DbTranslation module.")</span>
+  </div>
+</fieldset>

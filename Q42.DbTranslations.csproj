@@ -82,6 +82,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="placement.info" />
     <None Include="Views\Admin\Culture.cshtml" />
     <None Include="Views\Admin\Details.cshtml" />
     <None Include="Views\Admin\Index.cshtml" />
@@ -89,6 +90,7 @@
     <Content Include="Views\Web.config" />
     <Content Include="Properties\AssemblyInfo.cs" />
     <Content Include="Module.txt" />
+    <Content Include="Views\EditorTemplates\Parts\AdminCultureSettings.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Orchard\Orchard.Framework.csproj">
@@ -107,15 +109,21 @@
   <ItemGroup>
     <Compile Include="AdminMenu.cs" />
     <Compile Include="Controllers\AdminController.cs" />
+    <Compile Include="Drivers\AdminCultureSettingsPartDriver.cs" />
+    <Compile Include="Handlers\AdminCultureSettingsPartHandler.cs" />
     <Compile Include="Helpers\LocalizationHelpers.cs" />
     <Compile Include="Migrations.cs" />
+    <Compile Include="Models\AdminCultureSettingsPart.cs" />
     <Compile Include="Models\LocalizableStringRecord.cs" />
     <Compile Include="Models\StringEntry.cs" />
     <Compile Include="Models\TranslationRecord.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="Routes.cs" />
+    <Compile Include="Services\AdminCultureSelector.cs" />
+    <Compile Include="Services\EncodingDetection.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Services\LiveLocalizedStringManager.cs" />
-    <Compile Include="Services\EncodingDetection.cs" />
     <Compile Include="Services\LocalizationManagementService.cs" />
     <Compile Include="Services\LocalizationService.cs" />
     <Compile Include="ViewModels\CultureDetailsViewModel.cs" />

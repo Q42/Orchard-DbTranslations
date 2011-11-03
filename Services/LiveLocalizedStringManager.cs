@@ -12,7 +12,7 @@ using Orchard.Localization.Services;
 
 namespace Q42.DbTranslations.Services
 {
-
+  [OrchardFeature("Q42.DbTranslations")]
   [OrchardSuppressDependency("Orchard.Localization.Services.DefaultLocalizedStringManager")]
   public class LiveLocalizedStringManager : ILocalizedStringManager 
   {

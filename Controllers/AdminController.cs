@@ -7,7 +7,6 @@ using Orchard;
 using Orchard.Localization;
 using Orchard.Themes;
 using Q42.DbTranslations.Services;
-using Vandelay.TranslationManager.Services;
 using Orchard.Caching;
 using Q42.DbTranslations.Models;
 using System.Collections.Generic;

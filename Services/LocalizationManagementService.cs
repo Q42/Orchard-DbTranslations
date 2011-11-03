@@ -9,7 +9,7 @@ using Orchard;
 using Q42.DbTranslations.Models;
 using Path = Fluent.IO.Path;
 
-namespace Vandelay.TranslationManager.Services
+namespace Q42.DbTranslations.Services
 {
   public interface ILocalizationManagementService : IDependency
   {

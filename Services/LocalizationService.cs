@@ -175,37 +175,33 @@ namespace Q42.DbTranslations.Services
       return model;
     }
 
-    public IEnumerable<StringEntry> GetTranslations(string culture)
-    {
-      var wc = _wca.GetContext();
-      {
-        var _sessionLocator = wc.Resolve<ISessionLocator>();
-        using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+public IEnumerable<StringEntry> GetTranslations(string culture)
+{
+  using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+  {
+    // haalt alle mogelijke strings en description en hun vertaling in culture op
+    var paths = session.CreateSQLQuery(
+      @"  SELECT 
+        Localizable.StringKey,
+        Localizable.Context,
+        Translation.Value
+    FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
+    INNER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+        ON Localizable.Id = Translation.LocalizableStringRecord_id
+        AND Translation.Culture = :culture")
+      .AddScalar("StringKey", NHibernateUtil.String)
+      .AddScalar("Context", NHibernateUtil.String)
+      .AddScalar("Value", NHibernateUtil.String)
+      .SetParameter("culture", culture);
+    return paths.List<object[]>()
+        .Select(t => new StringEntry
         {
-          // haalt alle mogelijke strings en description en hun vertaling in culture op
-          var paths = session.CreateSQLQuery(
-            @"  SELECT 
-              Localizable.StringKey,
-              Localizable.Context,
-              Translation.Value
-          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
-          INNER JOIN Q42_DbTranslations_TranslationRecord AS Translation
-              ON Localizable.Id = Translation.LocalizableStringRecord_id
-              AND Translation.Culture = :culture")
-            .AddScalar("StringKey", NHibernateUtil.String)
-            .AddScalar("Context", NHibernateUtil.String)
-            .AddScalar("Value", NHibernateUtil.String)
-            .SetParameter("culture", culture);
-          return paths.List<object[]>()
-              .Select(t => new StringEntry
-              {
-                Key = (string)t[0],
-                Context = (string)t[1],
-                Translation = (string)t[2]
-              }).ToList();
-        }
-      }
-    }
+          Key = (string)t[0],
+          Context = (string)t[1],
+          Translation = (string)t[2]
+        }).ToList();
+  }
+}
 
 
     public IEnumerable<StringEntry> TranslateFile(string path, string content, string culture)

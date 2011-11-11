@@ -51,9 +51,6 @@ namespace Q42.DbTranslations.Services
     // In case it's not found anywhere, the text is returned as is.
     public string GetLocalizedString(string scope, string text, string cultureName)
     {
-      // profiler shows it can translate 200 strings in about 4ms
-      //using (Q42.Profiler.Profiler.Start("Translate"))
-      //{
         var culture = LoadCulture(cultureName);
 
         string scopedKey = (scope + "|" + text).ToLowerInvariant();
@@ -69,7 +66,6 @@ namespace Q42.DbTranslations.Services
         }
 
         return GetParentTranslation(scope, text, cultureName);
-      //}
     }
 
     private string GetParentTranslation(string scope, string text, string cultureName)

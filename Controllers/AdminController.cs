@@ -222,14 +222,13 @@ namespace Q42.DbTranslations.Controllers
     /// <returns></returns>
     public ActionResult Download(string culture)
     {
-      var cachePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/orchard." + culture + ".po.zip");
-      if (System.IO.File.Exists(cachePath) &&
-          DateTime.Now - System.IO.File.GetLastWriteTime(cachePath) < TimeSpan.FromDays(1))
-      {
-        return new FilePathResult(cachePath, "application/zip");
-      }
+      //var cachePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/orchard." + culture + ".po.zip");
       byte[] zipBytes = _localizationService.GetZipBytes(culture);
-      System.IO.File.WriteAllBytes(cachePath, zipBytes);
+
+      if (zipBytes == null)
+        throw new Exception("There are no translations in " + culture);
+
+      //System.IO.File.WriteAllBytes(cachePath, zipBytes);
       // todo: hij schrijft een goed bestand naar schijf en levert een corrupt bestand op
       return new FileContentResult(zipBytes, "application/zip")
       {

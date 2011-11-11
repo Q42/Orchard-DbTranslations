@@ -316,34 +316,43 @@ namespace Q42.DbTranslations.Services
     public byte[] GetZipBytes(string culture)
     {
       var model = GetCultureDetailsViewModel(culture);
-      var stream = new MemoryStream();
-      var zip = new ZipOutputStream(stream);
-      using (var writer = new StreamWriter(zip, Encoding.UTF8))
+
+      if (model.Groups.Count == 0)
+        return null;
+
+      using (var stream = new MemoryStream())
       {
-        foreach (var translationGroup in model.Groups)
+        using (var zip = new ZipOutputStream(stream))
         {
-          var file = new ZipEntry(translationGroup.Path) { DateTime = DateTime.Now };
-          zip.PutNextEntry(file);
-          writer.WriteLine(@"# Orchard resource strings - {0}
+          using (var writer = new StreamWriter(zip, Encoding.UTF8))
+          {
+            foreach (var translationGroup in model.Groups)
+            {
+              var file = new ZipEntry(translationGroup.Path) { DateTime = DateTime.Now };
+              zip.PutNextEntry(file);
+              writer.WriteLine(@"# Orchard resource strings - {0}
 # Copyright (c) 2010 Outercurve Foundation
 # All rights reserved
 # This file is distributed under the BSD license
+# This file is generated using the Q42.DbTranslations module
 ", culture);
-          foreach (var translation in translationGroup.Translations)
-          {
-            writer.WriteLine("#: " + translation.Context);
-            writer.WriteLine("#| msgid \"" + translation.Key + "\"");
-            writer.WriteLine("msgctx \"" + translation.Context + "\"");
-            writer.WriteLine("msgid \"" + translation.OriginalString + "\"");
-            writer.WriteLine("msgstr \"" + translation.LocalString + "\"");
-            writer.WriteLine();
+              foreach (var translation in translationGroup.Translations)
+              {
+                writer.WriteLine("#: " + translation.Context);
+                writer.WriteLine("#| msgid \"" + translation.Key + "\"");
+                writer.WriteLine("msgctx \"" + translation.Context + "\"");
+                writer.WriteLine("msgid \"" + translation.OriginalString + "\"");
+                writer.WriteLine("msgstr \"" + translation.LocalString + "\"");
+                writer.WriteLine();
+              }
+              writer.Flush();
+            }
           }
-          writer.Flush();
+          zip.IsStreamOwner = false;
+          zip.Close();
         }
+        return stream.ToArray();
       }
-      zip.IsStreamOwner = false;
-      zip.Close();
-      return stream.ToArray();
     }
 
     public CultureIndexViewModel GetCultures()

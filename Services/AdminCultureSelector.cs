@@ -23,6 +23,9 @@ namespace Q42.DbTranslations.Services
 
     public CultureSelectorResult GetCulture(HttpContextBase context)
     {
+      if (context == null || context.Request == null)
+        return null;
+
       bool isAdmin = context.Request.Path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
       if (!isAdmin)return null;
 

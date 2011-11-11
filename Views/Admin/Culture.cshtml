@@ -90,11 +90,11 @@
 
 <div class="content">
   <a href="#contribute-info" title="@T("Learn how to contribute your translations")" class="contribute-banner"> @T("Contribute your translations") </a>
-  <div class="contribute-inset">
+  <div class="contribute-inset hidden">
     <a href="#" title="close this box" class="close-inset">x</a>
     <p class="separate">
-      Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:
-      <span class="mail-address">localizationHelpers@lists.outercurve.org</span>
+      @T("Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:")
+      <a href="mailto:localizationHelpers@lists.outercurve.org">localizationHelpers@lists.outercurve.org</a>
     </p>
     <p class="separate">@Html.ActionLink("Download the zipped PO files", "Download", new {culture = Model.Culture}, new { @class = "download-link"})</p>
   </div>

@@ -31,6 +31,7 @@ namespace Q42.DbTranslations.Services
     void RemoveTranslation(int id, string culture);
     IEnumerable<StringEntry> GetTranslationsFromZip(Stream stream);
     bool IsCultureAllowed(string culture);
+    IEnumerable<string> GetTranslatedCultures();
     void ResetCache();
     IEnumerable<StringEntry> TranslateFile(string path, string content, string culture);
     void SaveStringsToDatabase(IEnumerable<StringEntry> strings);
@@ -47,10 +48,12 @@ namespace Q42.DbTranslations.Services
     public Localizer T { get; set; }
     private readonly ICacheManager _cacheManager;
     private readonly ISignals _signals;
+    private readonly IOrchardServices _services;
 
     public LocalizationService(ISessionLocator sessionLocator, IWorkContextAccessor wca, ICultureManager cultureManager,
-      ICacheManager cacheManager, ISignals signals)
+      ICacheManager cacheManager, ISignals signals, IOrchardServices services)
     {
+      _services = services;
       _signals = signals;
       T = NullLocalizer.Instance;
       _sessionLocator = sessionLocator;
@@ -355,6 +358,21 @@ namespace Q42.DbTranslations.Services
       }
     }
 
+    public IEnumerable<string> GetTranslatedCultures()
+    {
+      using (var session = _sessionLocator.For(typeof(TranslationRecord)))
+      {
+        var cultures = (from t in session.Linq<TranslationRecord>()
+                        group t by t.Culture
+                          into c
+                          select new { c.First().Culture }
+            ).ToList();
+
+        foreach (var culture in cultures)
+          yield return culture.Culture;
+      }
+    }
+
     public CultureIndexViewModel GetCultures()
     {
       var model = new CultureIndexViewModel();
@@ -455,9 +473,9 @@ namespace Q42.DbTranslations.Services
           var culture = cultureName;
           foreach (var se in TranslateFile(zipEntry.Name, content, culture))
             yield return se;
+          }
         }
       }
-    }
 
     public bool IsCultureAllowed(string culture)
     {

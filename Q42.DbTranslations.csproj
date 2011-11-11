@@ -84,6 +84,8 @@
   <ItemGroup>
     <None Include="Content\Web.config" />
     <None Include="placement.info" />
+    <None Include="Views\Admin\Export.cshtml" />
+    <None Include="Views\Admin\Import.cshtml" />
     <None Include="Views\Admin\Culture.cshtml" />
     <None Include="Views\Admin\Details.cshtml" />
     <None Include="Views\Admin\Index.cshtml" />

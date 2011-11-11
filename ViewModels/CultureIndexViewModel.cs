@@ -11,7 +11,6 @@ namespace Q42.DbTranslations.ViewModels
 
     public Dictionary<string, CultureTranslationState> TranslationStates { get; protected set; }
     public int NumberOfStringsInDefaultCulture { get; set; }
-    public bool CanUpload { get; set; }
 
     public class CultureTranslationState
     {

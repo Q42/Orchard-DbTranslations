@@ -28,8 +28,8 @@ namespace Q42.DbTranslations.Controllers
     public ILocalizationManagementService ManagementService { get; set; }
 
     public AdminController(
-        ILocalizationService localizationService,
-        IOrchardServices services,
+      ILocalizationService localizationService,
+      IOrchardServices services,
       ILocalizationManagementService managementService)
     {
       _localizationService = localizationService;
@@ -41,9 +41,25 @@ namespace Q42.DbTranslations.Controllers
     public ActionResult Index()
     {
       var model = _localizationService.GetCultures();
-      model.CanUpload = Services.Authorizer.Authorize(Permissions.UploadTranslation);
+      if (model.TranslationStates.Count == 0)
+        return RedirectToAction("Import");
       return View(model);
     }
+    public ActionResult Import()
+    {
+      if (!Services.Authorizer.Authorize(Permissions.UploadTranslation))
+        return RedirectToAction("Index");
+      var model = _localizationService.GetCultures();
+      return View(model);
+    }
+    public ActionResult Export()
+    {
+      var model = _localizationService.GetCultures();
+      if (model.TranslationStates.Count == 0)
+        return RedirectToAction("Import");
+      return View(model);
+    }
+
 
     public ActionResult Culture(string culture)
     {
@@ -236,6 +252,12 @@ namespace Q42.DbTranslations.Controllers
       };
     }
 
+    public ActionResult PoFilesToDisk()
+    {
+      Services.Notifier.Add(NotifyType.Information, T("This feature hasn't been implemented yet."));
+      return RedirectToAction("Export");
+    }
+
     public ActionResult FlushCache(string redirectUrl)
     {
       _localizationService.ResetCache();
@@ -250,7 +272,7 @@ namespace Q42.DbTranslations.Controllers
       //return Log(translations);
       _localizationService.SaveStringsToDatabase(translations);
 
-      Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
+      Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
 
       if (!string.IsNullOrEmpty(culture))
         ImportLiveOrchardPo(culture);

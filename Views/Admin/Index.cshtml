@@ -5,82 +5,31 @@
   Layout.Title = "Database translations";
 }
 
-@if (Model.TranslationStates.Count == 0)
-{
-  @T("No translations available.")
-}
-else
-{
-
-  if (Model.NumberOfStringsInDefaultCulture == 0)
-  { 
-    <div class="content">
-      <h2>@T("Import existing *.po files")</h2>
-      <p>@T("Just installed this module, but you already have translation po files installed? Import them into the database!")</p>
-      @Html.ActionLink("Import!", "ImportCurrentPos", null, new { @class = "button" })
-    </div>
-    <p>&nbsp;</p>
-  }
-  
-  <h2>@T("Orchard Translations")</h2>
-  <table class="items">
-    <th>@T("Culture")</th>
-    <th>@T("Translatable")</th>
-    <th>@T("Translated")</th>
-    <th>@T("Missing")</th>
-@*    @if (Model.NumberOfStringsInDefaultCulture < 200)
+<h2>@T("Orchard Translations")</h2>
+<table class="items">
+  <th>@T("Culture")</th>
+  <th>@T("Translatable")</th>
+  <th>@T("Translated")</th>
+  <th>@T("Missing")</th>
+  @foreach (var translation in Model.TranslationStates.OrderBy(c => c.Key))
+  {
+    var culture = CultureInfo.GetCultureInfoByIetfLanguageTag(translation.Key);
+    <tr>
+      <td>
+        @Html.ActionLink(
+            culture.IetfLanguageTag + " - " + culture.DisplayName,
+            "Culture",
+            new { culture = culture.Name })
+      </td>
+      <td>@Model.NumberOfStringsInDefaultCulture</td>
+      <td>@translation.Value.NumberOfTranslatedStrings</td>
+      <td>@(Model.NumberOfStringsInDefaultCulture - translation.Value.NumberOfTranslatedStrings)</td>
+    </tr>
+    if (translation.Value.NumberOfTranslatedStrings < 10)
     {
-      <tr><td></td><td rowspan="3">
-      @T("There are only {0} translatable strings. This doesn't seem to be enough to run all of Orchard.", Model.NumberOfStringsInDefaultCulture)
-      <br />
-      <a href="@Url.Action("FromSource")">@T("Click here to pre-fill the database using generate from code")</a>
+      <tr><td></td><td colspan="3">
+      <a href="@Url.Action("ImportLiveOrchardPo", new { culture = culture })">@T("Click here to pre-fill {0} using a *.po.zip file from www.orchardproject.net.", culture)</a>
       </td></tr>
-    }*@    
-    @foreach (var translation in Model.TranslationStates.OrderBy(c => c.Key))
-    {
-      var culture = CultureInfo.GetCultureInfoByIetfLanguageTag(translation.Key);
-      <tr>
-        <td>
-          @Html.ActionLink(
-              culture.IetfLanguageTag + " - " + culture.DisplayName,
-              "Culture",
-              new { culture = culture.Name })
-        </td>
-        <td>@Model.NumberOfStringsInDefaultCulture</td>
-        <td>@translation.Value.NumberOfTranslatedStrings</td>
-        <td>@(Model.NumberOfStringsInDefaultCulture - translation.Value.NumberOfTranslatedStrings)</td>
-      </tr>
-      if (translation.Value.NumberOfTranslatedStrings < 10)
-      {
-        <tr><td></td><td colspan="3">
-        @T("Only {0} translated strings out of {1}.", translation.Value.NumberOfTranslatedStrings, Model.NumberOfStringsInDefaultCulture)
-        <br />
-        <a href="@Url.Action("ImportLiveOrchardPo", new { culture = culture })">@T("Click here to pre-fill this culture using a *.po.zip file from www.orchardproject.net.")</a>
-        </td></tr>
-      }
     }
-  </table>
-}
-
-@if (Model.CanUpload)
-{
-  <p>&nbsp;</p>
-  
-  <div class="content">
-    <h2>@T("Generate from source")</h2>
-    <p>@T("Developing a module and want to add new translations to the database?<br />Existing translations will not be altered, only new translatable strings will be added. It can do no harm!")</p>
-    @Html.ActionLink("Generate from source", "FromSource", null, new { @class = "button" })
-  </div>
-  
-  <p>&nbsp;</p>
-  
-  <div class="content">
-    <h2>@T("Upload a new or updated translation file"):</h2>
-    <p>@T("The community is constantly adding new languages and translations, downloadable at <a target=\"_blank\" href=\"http://www.orchardproject.net/localize\">orchardproject.net/localize</a>. You can import the newest version of these *.po files here. Existing translations will not be altered, only new translatable strings will be added. It can do no harm!")</p>
-    <form action="@Url.Action("Upload")" method="post" enctype="multipart/form-data">
-    @Html.AntiForgeryTokenOrchard()
-    <input type="file" class="fileupload" name="pofile" />
-    <input type="submit" class="button" name="submit" value="Upload" />
-    </form>
-  </div>
-}
+  }
+</table>

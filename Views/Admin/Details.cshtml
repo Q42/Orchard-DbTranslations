@@ -13,7 +13,7 @@
   //<![CDATA[
     $(window).load(function () {
       //$('#translations input, #translations textarea').addClass('default');
-  		$('#translations input, #translations textarea').change(function (evt) {
+  		$('#translations input, #translations textarea').blur(function (evt) {
   			$(this).removeClass().addClass('saving');
   			// save new value to database
   			var newValue = $(this).val();
@@ -65,7 +65,7 @@
   
   #translations input, #translations textarea { background: #fdf5bc; }
   #translations input.valid, #translations textarea.valid  { background:#fff url(/Modules/Q42.DbTranslations/Content/form-valid.gif) no-repeat 1% 50%; }
-  #translations input.invalid, #translations textarea.invalid  { background: none; background-color: #ffaaaa; }
+  #translations input.invalid, #translations textarea.invalid  { background: none; background-color: #FDF5BC; }
   #translations input.saving, #translations textarea.saving  { background:#fff url(/Modules/Q42.DbTranslations/Content/loader.gif) no-repeat 1% 50%; } 
   #translations input.flux, #translations textarea.flux { background: none; background-color: white; }
 </style>

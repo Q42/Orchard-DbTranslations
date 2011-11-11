@@ -275,32 +275,32 @@ namespace Q42.DbTranslations.Services
     /// <param name="input"></param>
     private void SaveStringToDatabase(ISession session, StringEntry input)
     {
-      var translatedString =
+      var translatableString =
           (from s in session.Linq<LocalizableStringRecord>()
            where s.StringKey == input.Key
               && s.Context == input.Context
            select s).FirstOrDefault();
-      if (translatedString == null)
+      if (translatableString == null)
       {
-        translatedString = new LocalizableStringRecord
+        translatableString = new LocalizableStringRecord
         {
           Path = input.Path,
           Context = input.Context,
           StringKey = input.Key,
           OriginalLanguageString = input.English
         };
-        session.SaveOrUpdate(translatedString);
+        session.SaveOrUpdate(translatableString);
       }
-      else if (translatedString.OriginalLanguageString != input.English)
+      else if (translatableString.OriginalLanguageString != input.English)
       {
-        translatedString.OriginalLanguageString = input.English;
-        session.SaveOrUpdate(translatedString);
+        translatableString.OriginalLanguageString = input.English;
+        session.SaveOrUpdate(translatableString);
       }
 
       if (!string.IsNullOrEmpty(input.Culture) && !string.IsNullOrEmpty(input.Translation))
       {
         var translation =
-            (from t in translatedString.Translations
+            (from t in translatableString.Translations
              where t.Culture.Equals(input.Culture)
              select t).FirstOrDefault() ?? new TranslationRecord
              {
@@ -308,8 +308,8 @@ namespace Q42.DbTranslations.Services
                Value = input.Translation
              };
         if (translation.LocalizableStringRecord == null)
-          translatedString.AddTranslation(translation);
-        session.SaveOrUpdate(translatedString);
+          translatableString.AddTranslation(translation);
+        session.SaveOrUpdate(translatableString);
         session.SaveOrUpdate(translation);
       }
 
@@ -420,23 +420,31 @@ namespace Q42.DbTranslations.Services
         var translation = localizable.Translations.Where(t => t.Culture == culture).FirstOrDefault();
         if (translation == null)
         {
-          var newTranslation = new TranslationRecord
+          if (!string.IsNullOrEmpty(value))
           {
-            Culture = culture,
-            Value = value,
-            LocalizableStringRecord = localizable
-          };
-          localizable.Translations.Add(newTranslation);
-          session.SaveOrUpdate(newTranslation);
-          session.SaveOrUpdate(localizable);
+            var newTranslation = new TranslationRecord
+            {
+              Culture = culture,
+              Value = value,
+              LocalizableStringRecord = localizable
+            };
+            localizable.Translations.Add(newTranslation);
+            session.SaveOrUpdate(newTranslation);
+            session.SaveOrUpdate(localizable);
+            SetCacheInvalid();
+          }
         }
-        else
+        else if (string.IsNullOrEmpty(value))
+        {
+          session.Delete(translation);
+          SetCacheInvalid();
+        }
+        else if (translation.Value != value)
         {
           translation.Value = value;
           session.SaveOrUpdate(translation);
+          SetCacheInvalid();
         }
-
-        SetCacheInvalid();
       }
     }
 

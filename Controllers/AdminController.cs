@@ -15,9 +15,11 @@ using System.Text;
 using Orchard.UI.Notify;
 using System.Text.RegularExpressions;
 using System.Net;
+using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations.Controllers
 {
+  [OrchardFeature("Q42.DbTranslations")]
   [Themed]
   public class AdminController : Controller
   {

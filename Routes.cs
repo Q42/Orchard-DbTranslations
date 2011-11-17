@@ -2,9 +2,11 @@
 using System.Web.Mvc;
 using System.Web.Routing;
 using Orchard.Mvc.Routes;
+using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations
 {
+  [OrchardFeature("Q42.DbTranslations")]
   public class Routes : IRouteProvider
   {
     public void GetRoutes(ICollection<RouteDescriptor> routes)

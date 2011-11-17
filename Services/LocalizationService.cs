@@ -19,6 +19,7 @@ using Orchard.UI.Notify;
 using System.Web.Mvc;
 using Orchard.Localization;
 using Orchard.Caching;
+using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations.Services
 {
@@ -40,6 +41,7 @@ namespace Q42.DbTranslations.Services
     IEnumerable<StringEntry> GetTranslations(string culture);
   }
 
+  [OrchardFeature("Q42.DbTranslations")]
   public class LocalizationService : ILocalizationService, INotificationProvider
   {
     private readonly ISessionLocator _sessionLocator;

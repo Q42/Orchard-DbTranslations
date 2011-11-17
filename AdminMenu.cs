@@ -1,9 +1,11 @@
 ﻿using Orchard.Localization;
 using Orchard.Security;
 using Orchard.UI.Navigation;
+using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations
 {
+  [OrchardFeature("Q42.DbTranslations")]
   public class AdminMenu : INavigationProvider
   {
 

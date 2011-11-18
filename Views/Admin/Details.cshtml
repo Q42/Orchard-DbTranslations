@@ -13,61 +13,63 @@
   //<![CDATA[
     $(window).load(function () {
       //$('#translations input, #translations textarea').addClass('default');
-  		$('#translations input, #translations textarea').blur(function (evt) {
-  			$(this).removeClass().addClass('saving');
-  			// save new value to database
-  			var newValue = $(this).val();
-  			var url = "/Admin/localize/update";
-  			var postdata = { culture: '@Model.Culture', id: $(this).data('id'), value: newValue, __RequestVerificationToken: $('input[name=__RequestVerificationToken]').val() }
- 				$.post(url, postdata, onsuccess).error(function () { alert("error"); });
- 	  	});
+      $('#translations input, #translations textarea').blur(function (evt) {
+        $(this).removeClass().addClass('saving');
+        // save new value to database
+        var newValue = $(this).val();
+        var url = @Html.Raw(string.Format("\"{0}\"", Url.Action("update")));
+        var postdata = { culture: '@Model.Culture', id: $(this).data('id'), value: newValue, __RequestVerificationToken: $('input[name=__RequestVerificationToken]').val() }
+        $.post(url, postdata, onsuccess).error(function (e) { console.log(url, postdata, e); alert("error in " + url + "\n\n" + e.responseText); });
+      });
 
- 		  $('.items input').bind('focus',function() {
- 		    $(this).removeClass().addClass('flux');
- 		  });
+      $('.items input, .items textarea').bind('focus',function() {
+        $(this).removeClass().addClass('flux');
+      });
 
-    	indicateValidatedCells(true); // indicate validity for all cells on page load
+      indicateValidatedCells(true); // indicate validity for all cells on page load
     });
 
     function indicateValidatedCells(checkAll) {
-			var filter = '';
-			checkAll ? filter = 'input' : filter = 'input.saving,input.flux';
-  		$('.items').find(filter).each(function (i, e) {
-  			if ($(e).val() != '' || $(e).attr('placeholder') != undefined) {
-  				$(e).removeClass().addClass('valid');
-  			} else {
-  				$(e).removeClass().addClass('invalid');
-  			}
-  		});
-  	}
+      var filter = '';
+      checkAll ? filter = 'input,textarea' : filter = '.saving,.flux';
+      $('.items').find(filter).each(function (i, e) {
+        if ($(e).val() != '' || $(e).attr('placeholder') != undefined) {
+          $(e).removeClass().addClass('valid');
+        } else {
+          $(e).removeClass().addClass('invalid');
+        }
+      });
+    }
 
     function onsuccess(data, textStatus, jqXHR) {
-    	// todo vinkie
-			indicateValidatedCells(false);
+      // todo vinkie
+      indicateValidatedCells(false);
     }
   //]]>
   </script>
 }
 
 <style>
+  #translations td { vertical-align: top; }
   #translations input  
   {
-  	width: 95%; 
-  	padding-left: 20px; 
-  	border-width: 1px;
-		border-style: solid;
-		border-color: #BFBEBB #E7E6E3 #E7E6E3 #BFBEBB;
-		border-radius: 4px;
-		-moz-border-radius: 4px;
-		-webkit-border-radius: 4px;
+    width: 95%; 
+    padding-left: 20px; 
+    border-width: 1px;
+    border-style: solid;
+    border-color: #BFBEBB #E7E6E3 #E7E6E3 #BFBEBB;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
   }
-  #translations textarea{ width: 100%; height: 100px; }
+  #translations textarea { width: 95%; height: 100px; padding-left: 20px; }
   
   #translations input, #translations textarea { background: #fdf5bc; }
-  #translations input.valid, #translations textarea.valid  { background:#fff url(/Modules/Q42.DbTranslations/Content/form-valid.gif) no-repeat 1% 50%; }
-  #translations input.invalid, #translations textarea.invalid  { background: none; background-color: #FDF5BC; }
-  #translations input.saving, #translations textarea.saving  { background:#fff url(/Modules/Q42.DbTranslations/Content/loader.gif) no-repeat 1% 50%; } 
-  #translations input.flux, #translations textarea.flux { background: none; background-color: white; }
+  #translations .valid { background:#fff url(/Modules/Q42.DbTranslations/Content/form-valid.gif) no-repeat 2px 50%; }
+  #translations .saving { background:#fff url(/Modules/Q42.DbTranslations/Content/loader.gif) no-repeat 2px 50%; } 
+  #translations .invalid { background: none; background-color: #FDF5BC; }
+  #translations .flux { background: none; background-color: white; }
+
 </style>
 
 @Html.AntiForgeryTokenOrchard()
@@ -89,15 +91,16 @@
         foreach (var translation in translationGroup.OrderBy(t => t.Key))
         {
           <tr>
-            <td title="@translation.OriginalString">@translation.Key</td>
+            <td @if (translation.OriginalString != translation.LocalString)
+                { <text>title="@translation.OriginalString" </text> }>@translation.Key.Replace("\"\"","\"")</td>
             <td>
               @if (!Model.CanTranslate)
               {
                 @translation.LocalString
               }
-              else if (translation.OriginalString.Contains('\n'))
+              else if (translation.OriginalString.Contains('\n') || (translation.LocalString != null && translation.LocalString.Length > 70))
               {
-                <textarea name="@translation.Id">@translation.LocalString</textarea>
+                <textarea data-id="@translation.Id" name="@translation.Id">@translation.LocalString</textarea>
               }else {
                 <input type="text" value="@translation.LocalString" name="@translation.Id" 
                   data-id="@translation.Id" @if (@translation.OriginalString != translation.Key) {<text>placeholder="@translation.OriginalString"</text>} />

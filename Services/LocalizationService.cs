@@ -1,25 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Web;
+using System.Web.Mvc;
 using ICSharpCode.SharpZipLib.Zip;
 using NHibernate;
 using NHibernate.Linq;
 using Orchard;
+using Orchard.Caching;
 using Orchard.ContentManagement;
 using Orchard.Data;
-using Orchard.Roles.Models;
-using Q42.DbTranslations.Models;
-using Q42.DbTranslations.ViewModels;
-using System.Collections.Generic;
+using Orchard.Localization;
 using Orchard.Localization.Services;
+using Orchard.Roles.Models;
 using Orchard.UI.Admin.Notification;
 using Orchard.UI.Notify;
-using System.Web.Mvc;
-using Orchard.Localization;
-using Orchard.Caching;
-using Orchard.Environment.Extensions;
+using Q42.DbTranslations.Models;
+using Q42.DbTranslations.ViewModels;
+using System.Security.AccessControl;
 
 namespace Q42.DbTranslations.Services
 {
@@ -39,6 +38,8 @@ namespace Q42.DbTranslations.Services
     CultureGroupDetailsViewModel GetModules(string culture);
     CultureGroupDetailsViewModel GetTranslations(string culture, string path);
     IEnumerable<StringEntry> GetTranslations(string culture);
+    void SavePoFilesToDisk(string culture);
+    void SavePoFilesToDisk();
   }
 
   public class LocalizationService : ILocalizationService, INotificationProvider
@@ -83,16 +84,14 @@ namespace Q42.DbTranslations.Services
               {
                 Path = String.Format(s.Path, culture)
               };
+              if (!group.Path.Contains(culture))
+                throw new Exception("Something went wrong: the culture is not included in the path.");
               model.Groups.Add(group);
               currentPath = s.Path;
             }
-            var translation = s.Translations
-                .Where(t => t.Culture == culture)
-                .FirstOrDefault();
-            if (group != null &&
-                ((s.Translations.Count(t => t.Culture.Equals("en-US", StringComparison.OrdinalIgnoreCase)) > 0) ||
-                 (translation != null && !String.IsNullOrEmpty(translation.Value))))
+            if (group != null)
             {
+              var translation = s.Translations.Where(t => t.Culture == culture).FirstOrDefault();
               group.Translations.Add(new CultureDetailsViewModel.TranslationViewModel
               {
                 Context = s.Context,
@@ -298,13 +297,18 @@ namespace Q42.DbTranslations.Services
            select s).FirstOrDefault();
       if (translatableString == null)
       {
+        string path = input.Path;
+        if (!path.Contains("{0}") && !string.IsNullOrEmpty(input.Culture))
+          path = path.Replace(input.Culture, "{0}");
         translatableString = new LocalizableStringRecord
         {
-          Path = input.Path,
+          Path = path,
           Context = input.Context,
           StringKey = input.Key,
           OriginalLanguageString = input.English
         };
+        if (!translatableString.Path.Contains("{0}"))
+          throw new Exception("Path should contain {0}, but doesn't.\n" + translatableString.Path);
         session.SaveOrUpdate(translatableString);
       }
       else if (translatableString.OriginalLanguageString != input.English)
@@ -321,7 +325,7 @@ namespace Q42.DbTranslations.Services
              select t).FirstOrDefault() ?? new TranslationRecord
              {
                Culture = input.Culture,
-               Value = input.Translation
+               Value = input.Translation.Replace("\"\"","\"")
              };
         if (translation.LocalizableStringRecord == null)
           translatableString.AddTranslation(translation);
@@ -357,11 +361,11 @@ namespace Q42.DbTranslations.Services
 ", culture);
               foreach (var translation in translationGroup.Translations)
               {
-                writer.WriteLine("#: " + translation.Context);
-                writer.WriteLine("#| msgid \"" + translation.Key + "\"");
-                writer.WriteLine("msgctx \"" + translation.Context + "\"");
-                writer.WriteLine("msgid \"" + translation.OriginalString + "\"");
-                writer.WriteLine("msgstr \"" + translation.LocalString + "\"");
+                writer.WriteLine("#: " + OutputPoText(translation.Context));
+                writer.WriteLine("#| msgid \"" + OutputPoText(translation.Key) + "\"");
+                writer.WriteLine("msgctx \"" + OutputPoText(translation.Context) + "\"");
+                writer.WriteLine("msgid \"" + OutputPoText(translation.OriginalString) + "\"");
+                writer.WriteLine("msgstr \"" + OutputPoText(translation.LocalString) + "\"");
                 writer.WriteLine();
               }
               writer.Flush();
@@ -371,6 +375,59 @@ namespace Q42.DbTranslations.Services
           zip.Close();
         }
         return stream.ToArray();
+      }
+    }
+
+    private string OutputPoText(string input)
+    {
+      return input.Replace("\"", "\"\"");
+    }
+
+    public void SavePoFilesToDisk()
+    {
+      foreach (var culture in GetTranslatedCultures())
+        SavePoFilesToDisk(culture);
+    }
+
+    public void SavePoFilesToDisk(string culture)
+    {
+      var model = GetCultureDetailsViewModel(culture);
+
+      if (model.Groups.Count == 0)
+        return;
+
+      foreach (var translationGroup in model.Groups)
+      {
+        string path = Path.Combine(_wca.GetContext().HttpContext.Server.MapPath("~"), translationGroup.Path);
+        var file = new FileInfo(path);
+
+        // delete the file if it already exists
+        if (file.Exists)
+          file.Delete();
+
+        // create directory if it doesn't exist
+        else if (!file.Directory.Exists)
+          file.Directory.Create();
+
+        using (var writer = File.CreateText(path))
+        {
+          writer.WriteLine(@"# Orchard resource strings - {0}
+# Copyright (c) 2010 Outercurve Foundation
+# All rights reserved
+# This file is distributed under the BSD license
+# This file is generated using the Q42.DbTranslations module
+", culture);
+          foreach (var translation in translationGroup.Translations)
+          {
+            writer.WriteLine("#: " + OutputPoText(translation.Context));
+            writer.WriteLine("#| msgid \"" + OutputPoText(translation.Key) + "\"");
+            writer.WriteLine("msgctx \"" + OutputPoText(translation.Context) + "\"");
+            writer.WriteLine("msgid \"" + OutputPoText(translation.OriginalString) + "\"");
+            writer.WriteLine("msgstr \"" + OutputPoText(translation.LocalString) + "\"");
+            writer.WriteLine();
+          }
+          writer.Flush();
+        }
       }
     }
 

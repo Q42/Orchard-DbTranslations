@@ -255,7 +255,8 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult PoFilesToDisk()
     {
-      Services.Notifier.Add(NotifyType.Information, T("This feature hasn't been implemented yet."));
+      _localizationService.SavePoFilesToDisk();
+      Services.Notifier.Add(NotifyType.Information, T("*.po files saved to disk"));
       return RedirectToAction("Export");
     }
 

@@ -23,24 +23,24 @@
   <th>@T("Translatable")</th>
   <th>@T("Translated")</th>
   <th>@T("Missing")</th>
-  <th>@T("Action")</th>
   @foreach (var translation in Model.TranslationStates.OrderBy(c => c.Key))
   {
     var culture = CultureInfo.GetCultureInfoByIetfLanguageTag(translation.Key);
     <tr>
       <td>
-        @Html.ActionLink(
-            culture.IetfLanguageTag + " - " + culture.DisplayName,
-            "Culture",
-            new { culture = culture.Name })
+        @if (translation.Value.NumberOfTranslatedStrings > 0)
+        {
+          @Html.ActionLink(culture.IetfLanguageTag + " - " + culture.DisplayName, 
+            "Download", new { culture = culture }, new { @class = "download-link" }) 
+        }
+        else
+        { 
+          @(culture.IetfLanguageTag + " - " + culture.DisplayName)
+        }
       </td>
       <td>@Model.NumberOfStringsInDefaultCulture</td>
       <td>@translation.Value.NumberOfTranslatedStrings</td>
       <td>@(Model.NumberOfStringsInDefaultCulture - translation.Value.NumberOfTranslatedStrings)</td>
-      <td>@if (translation.Value.NumberOfTranslatedStrings > 0)
-          {
-            @Html.ActionLink("Download", "Download", new { culture = culture }, new { @class = "download-link" }) 
-          }</td>
     </tr>
   }
 </table>

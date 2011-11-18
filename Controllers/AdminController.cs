@@ -19,7 +19,6 @@ using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations.Controllers
 {
-  [OrchardFeature("Q42.DbTranslations")]
   [Themed]
   public class AdminController : Controller
   {

@@ -46,17 +46,5 @@ namespace Q42.DbTranslations
       return 1;
     }
 
-    public int UpdateFrom1()
-    {
-      SchemaBuilder.CreateTable(typeof(AdminCultureSettingsPartRecord).Name, table => table
-        .ContentPartRecord()
-        .Column("AdminCulture", DbType.String)
-      );
-
-      ContentDefinitionManager.AlterPartDefinition(typeof(AdminCultureSettingsPartRecord).Name, part => part.Attachable(false));
-
-      return 2;
-    }
-
   }
 }

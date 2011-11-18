@@ -12,9 +12,8 @@ using Orchard.Localization.Services;
 
 namespace Q42.DbTranslations.Services
 {
-  [OrchardFeature("Q42.DbTranslations")]
   [OrchardSuppressDependency("Orchard.Localization.Services.DefaultLocalizedStringManager")]
-  public class LiveLocalizedStringManager : ILocalizedStringManager 
+  public class LiveLocalizedStringManager : ILocalizedStringManager
   {
     private readonly IWebSiteFolder _webSiteFolder;
     private readonly IExtensionManager _extensionManager;
@@ -51,21 +50,21 @@ namespace Q42.DbTranslations.Services
     // In case it's not found anywhere, the text is returned as is.
     public string GetLocalizedString(string scope, string text, string cultureName)
     {
-        var culture = LoadCulture(cultureName);
+      var culture = LoadCulture(cultureName);
 
-        string scopedKey = (scope + "|" + text).ToLowerInvariant();
-        if (culture.Translations.ContainsKey(scopedKey))
-        {
-          return culture.Translations[scopedKey];
-        }
+      string scopedKey = (scope + "|" + text).ToLowerInvariant();
+      if (culture.Translations.ContainsKey(scopedKey))
+      {
+        return culture.Translations[scopedKey];
+      }
 
-        string genericKey = ("|" + text).ToLowerInvariant();
-        if (culture.Translations.ContainsKey(genericKey))
-        {
-          return culture.Translations[genericKey];
-        }
+      string genericKey = ("|" + text).ToLowerInvariant();
+      if (culture.Translations.ContainsKey(genericKey))
+      {
+        return culture.Translations[genericKey];
+      }
 
-        return GetParentTranslation(scope, text, cultureName);
+      return GetParentTranslation(scope, text, cultureName);
     }
 
     private string GetParentTranslation(string scope, string text, string cultureName)

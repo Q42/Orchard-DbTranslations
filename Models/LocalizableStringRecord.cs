@@ -3,7 +3,6 @@ using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations.Models
 {
-  [OrchardFeature("Q42.DbTranslations")]
   public class LocalizableStringRecord
   {
     public LocalizableStringRecord()

@@ -1,0 +1,324 @@
+# Orchard resource strings - en-US
+# Copyright (c) 2010 Outercurve Foundation
+# All rights reserved
+# This file is distributed under the BSD license
+# This file is generated using the Q42.DbTranslations module
+
+#: Q42.DbTranslations.AdminMenu
+#| msgid "Translations"
+msgctx "Q42.DbTranslations.AdminMenu"
+msgid "Translations"
+msgstr ""
+
+#: Q42.DbTranslations.AdminMenu
+#| msgid "Translate"
+msgctx "Q42.DbTranslations.AdminMenu"
+msgid "Translate"
+msgstr ""
+
+#: Q42.DbTranslations.AdminMenu
+#| msgid "Import"
+msgctx "Q42.DbTranslations.AdminMenu"
+msgid "Import"
+msgstr ""
+
+#: Q42.DbTranslations.AdminMenu
+#| msgid "Export"
+msgctx "Q42.DbTranslations.AdminMenu"
+msgid "Export"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "You are not allowed to upload translations."
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "You are not allowed to upload translations."
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "Imported {0} translations from {1} *.po files"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "Imported {0} translations from {1} *.po files"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "Imported {0} translations in {1}"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "Imported {0} translations in {1}"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "File could not be found: {0}"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "File could not be found: {0}"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "Imported {0} translations"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "Imported {0} translations"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "You are not allowed to update translations."
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "You are not allowed to update translations."
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "You are not allowed to delete translations."
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "You are not allowed to delete translations."
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "*.po files saved to disk"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "*.po files saved to disk"
+msgstr ""
+
+#: Q42.DbTranslations.Controllers.AdminController
+#| msgid "Imported {0} translatable strings"
+msgctx "Q42.DbTranslations.Controllers.AdminController"
+msgid "Imported {0} translatable strings"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Learn how to contribute your translations"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Learn how to contribute your translations"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Contribute your translations"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Contribute your translations"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Module"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Module"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Total"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Total"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Translated"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Translated"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml
+#| msgid "Missing"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Culture.cshtml"
+msgid "Missing"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Details.cshtml
+#| msgid "Key"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Details.cshtml"
+msgid "Key"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Details.cshtml
+#| msgid "Value in {0}"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Details.cshtml"
+msgid "Value in {0}"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Contribute"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Contribute"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Once you have a partial or complete translation that you want to submit, please send the zipped package of PO files to the list:"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "For more information, see "
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "For more information, see "
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Download *.po.zip files"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Download *.po.zip files"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Culture"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Culture"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Translatable"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Translatable"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Translated"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Translated"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Missing"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Missing"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Export *.po files to disk"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Export *.po files to disk"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml
+#| msgid "Want to go back to the way it was? Export your translations to disk and disable the Q42.DbTranslations feature. <br />Might also be useful if you want to check your translations into a code repository."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Export.cshtml"
+msgid "Want to go back to the way it was? Export your translations to disk and disable the Q42.DbTranslations feature. <br />Might also be useful if you want to check your translations into a code repository."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Import translations from orchardproject.net"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Import translations from orchardproject.net"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "The newest version of translations is automatically downloaded from www.orchardproject.net and installed into the database."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "The newest version of translations is automatically downloaded from www.orchardproject.net and installed into the database."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Culture"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Culture"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Action"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Action"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Click here to fill this culture using a *.po.zip file from www.orchardproject.net."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Click here to fill this culture using a *.po.zip file from www.orchardproject.net."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Import existing *.po files"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Import existing *.po files"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Already have translation po files installed? Import them into the database!"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Already have translation po files installed? Import them into the database!"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Generate from source"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Generate from source"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Developing a module and want to add new translations to the database?<br />Existing translations will not be altered, only new translatable strings will be added."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Developing a module and want to add new translations to the database?<br />Existing translations will not be altered, only new translatable strings will be added."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "Upload a new or updated translation file"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "Upload a new or updated translation file"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml
+#| msgid "The community is constantly adding new languages and translations, downloadable at <a target=""_blank"" href=""http://www.orchardproject.net/localize"">orchardproject.net/localize</a>. You can import the newest version of these *.po.zip files here."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Import.cshtml"
+msgid "The community is constantly adding new languages and translations, downloadable at <a target=""_blank"" href=""http://www.orchardproject.net/localize"">orchardproject.net/localize</a>. You can import the newest version of these *.po.zip files here."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Orchard Translations"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Orchard Translations"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Culture"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Culture"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Translatable"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Translatable"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Translated"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Translated"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Missing"
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Missing"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml
+#| msgid "Click here to pre-fill {0} using a *.po.zip file from www.orchardproject.net."
+msgctx "~/Modules/Q42.DbTranslations/Views/Admin/Index.cshtml"
+msgid "Click here to pre-fill {0} using a *.po.zip file from www.orchardproject.net."
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Module.txt
+#| msgid "Name"
+msgctx "~/Modules/Q42.DbTranslations/Module.txt"
+msgid "Q42.DbTranslations"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Module.txt
+#| msgid "Author"
+msgctx "~/Modules/Q42.DbTranslations/Module.txt"
+msgid "Lukasvan3L, Jaap Taal @ Q42"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Module.txt
+#| msgid "Website"
+msgctx "~/Modules/Q42.DbTranslations/Module.txt"
+msgid "https://github.com/Q42/Orchard-DbTranslations/wiki/Orchard-Database-Translations"
+msgstr ""
+
+#: ~/Modules/Q42.DbTranslations/Module.txt
+#| msgid "Description"
+msgctx "~/Modules/Q42.DbTranslations/Module.txt"
+msgid "Enables interface translation feature directly in Orchard's admin panels instead of .po files"
+msgstr ""
+

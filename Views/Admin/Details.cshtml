@@ -92,7 +92,7 @@
         {
           <tr>
             <td @if (translation.OriginalString != translation.LocalString)
-                { <text>title="@translation.OriginalString" </text> }>@translation.Key.Replace("\"\"","\"")</td>
+                { <text>title="@translation.OriginalString" </text> }>@Q42.DbTranslations.Services.LocalizationService.ImportPoText(translation.Key)</td>
             <td>
               @if (!Model.CanTranslate)
               {

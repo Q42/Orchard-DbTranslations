@@ -325,7 +325,7 @@ namespace Q42.DbTranslations.Services
              select t).FirstOrDefault() ?? new TranslationRecord
              {
                Culture = input.Culture,
-               Value = input.Translation.Replace("\"\"","\"")
+               Value = ImportPoText(input.Translation)
              };
         if (translation.LocalizableStringRecord == null)
           translatableString.AddTranslation(translation);
@@ -361,11 +361,11 @@ namespace Q42.DbTranslations.Services
 ", culture);
               foreach (var translation in translationGroup.Translations)
               {
-                writer.WriteLine("#: " + OutputPoText(translation.Context));
-                writer.WriteLine("#| msgid \"" + OutputPoText(translation.Key) + "\"");
-                writer.WriteLine("msgctx \"" + OutputPoText(translation.Context) + "\"");
-                writer.WriteLine("msgid \"" + OutputPoText(translation.OriginalString) + "\"");
-                writer.WriteLine("msgstr \"" + OutputPoText(translation.LocalString) + "\"");
+                writer.WriteLine("#: " + ExportPoText(translation.Context));
+                writer.WriteLine("#| msgid \"" + ExportPoText(translation.Key) + "\"");
+                writer.WriteLine("msgctx \"" + ExportPoText(translation.Context) + "\"");
+                writer.WriteLine("msgid \"" + ExportPoText(translation.OriginalString) + "\"");
+                writer.WriteLine("msgstr \"" + ExportPoText(translation.LocalString) + "\"");
                 writer.WriteLine();
               }
               writer.Flush();
@@ -378,9 +378,14 @@ namespace Q42.DbTranslations.Services
       }
     }
 
-    private string OutputPoText(string input)
+    public static string ExportPoText(string input)
     {
       return input.Replace("\"", "\"\"");
+    }
+
+    public static string ImportPoText(string input)
+    {
+      return input.Replace("\"\"", "\"").Replace("\\\"", "\"");
     }
 
     public void SavePoFilesToDisk()
@@ -419,11 +424,11 @@ namespace Q42.DbTranslations.Services
 ", culture);
           foreach (var translation in translationGroup.Translations)
           {
-            writer.WriteLine("#: " + OutputPoText(translation.Context));
-            writer.WriteLine("#| msgid \"" + OutputPoText(translation.Key) + "\"");
-            writer.WriteLine("msgctx \"" + OutputPoText(translation.Context) + "\"");
-            writer.WriteLine("msgid \"" + OutputPoText(translation.OriginalString) + "\"");
-            writer.WriteLine("msgstr \"" + OutputPoText(translation.LocalString) + "\"");
+            writer.WriteLine("#: " + ExportPoText(translation.Context));
+            writer.WriteLine("#| msgid \"" + ExportPoText(translation.Key) + "\"");
+            writer.WriteLine("msgctx \"" + ExportPoText(translation.Context) + "\"");
+            writer.WriteLine("msgid \"" + ExportPoText(translation.OriginalString) + "\"");
+            writer.WriteLine("msgstr \"" + ExportPoText(translation.LocalString) + "\"");
             writer.WriteLine();
           }
           writer.Flush();

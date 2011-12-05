@@ -380,6 +380,7 @@ namespace Q42.DbTranslations.Services
 
     public static string ExportPoText(string input)
     {
+      if (input == null) return null;
       return input.Replace("\"", "\"\"");
     }
 

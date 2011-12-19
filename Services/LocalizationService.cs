@@ -239,17 +239,16 @@ namespace Q42.DbTranslations.Services
           }
           else if (line.StartsWith("#| msgid \""))
           {
-            currentId = line.Substring(10, line.Length - 11);
+            currentId = ImportPoText(line.Substring(10, line.Length - 11));
           }
           else if (line.StartsWith("msgid \""))
           {
-            currentOriginal = line.Substring(7, line.Length - 8);
+            currentOriginal = ImportPoText(line.Substring(7, line.Length - 8));
           }
           else if (line.StartsWith("msgstr \""))
           {
-            var id = currentId;
             var context = currentContext;
-            var translation = line.Substring(8, line.Length - 9);
+            var translation = ImportPoText(line.Substring(8, line.Length - 9));
             if (!string.IsNullOrEmpty(translation))
             {
               yield return new StringEntry
@@ -325,7 +324,7 @@ namespace Q42.DbTranslations.Services
              select t).FirstOrDefault() ?? new TranslationRecord
              {
                Culture = input.Culture,
-               Value = ImportPoText(input.Translation)
+               Value = input.Translation
              };
         if (translation.LocalizableStringRecord == null)
           translatableString.AddTranslation(translation);
@@ -584,9 +583,9 @@ namespace Q42.DbTranslations.Services
       return true;
 
       // todo wtf?
-      var ctx = _wca.GetContext();
-      var rolesPart = ctx.CurrentUser.As<UserRolesPart>();
-      return (rolesPart != null && rolesPart.Roles.Contains(culture));
+      //var ctx = _wca.GetContext();
+      //var rolesPart = ctx.CurrentUser.As<UserRolesPart>();
+      //return (rolesPart != null && rolesPart.Roles.Contains(culture));
     }
 
     public IEnumerable<NotifyEntry> GetNotifications()

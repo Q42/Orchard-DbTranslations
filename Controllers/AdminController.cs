@@ -90,11 +90,12 @@ namespace Q42.DbTranslations.Controllers
     /// </summary>
     /// <param name="culture"></param>
     /// <returns></returns>
-    public ActionResult ImportCurrentPos()
+    public ActionResult ImportCurrentPos(bool? overwrite)
     {
       if (!Services.Authorizer.Authorize(
           Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
+
 
       List<StringEntry> strings = new List<StringEntry>();
       var files = Directory.GetFiles(Server.MapPath("~"), "*.po", SearchOption.AllDirectories);
@@ -110,7 +111,7 @@ namespace Q42.DbTranslations.Controllers
       }
 
       //return Log(strings);
-      _localizationService.SaveStringsToDatabase(strings);
+      _localizationService.SaveStringsToDatabase(strings, overwrite ?? false);
       Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
       _localizationService.ResetCache();
       return RedirectToAction("Index");
@@ -143,7 +144,7 @@ namespace Q42.DbTranslations.Controllers
       using (var stream = req.GetResponse().GetResponseStream())
         strings = _localizationService.GetTranslationsFromZip(stream).ToList();
       //return Log(strings);
-      _localizationService.SaveStringsToDatabase(strings);
+      _localizationService.SaveStringsToDatabase(strings, false);
       _localizationService.ResetCache();
       return RedirectToAction("Index");
     }
@@ -193,7 +194,7 @@ namespace Q42.DbTranslations.Controllers
       }
 
       //return Log(strings);
-      _localizationService.SaveStringsToDatabase(strings);
+      _localizationService.SaveStringsToDatabase(strings, false);
       Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
 
       _localizationService.ResetCache();
@@ -272,7 +273,7 @@ namespace Q42.DbTranslations.Controllers
     {
       var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~")).ToList();
       //return Log(translations);
-      _localizationService.SaveStringsToDatabase(translations);
+      _localizationService.SaveStringsToDatabase(translations, false);
 
       Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
 

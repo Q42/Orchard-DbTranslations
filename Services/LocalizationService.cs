@@ -34,7 +34,7 @@ namespace Q42.DbTranslations.Services
     IEnumerable<string> GetTranslatedCultures();
     void ResetCache();
     IEnumerable<StringEntry> TranslateFile(string path, string content, string culture);
-    void SaveStringsToDatabase(IEnumerable<StringEntry> strings);
+    void SaveStringsToDatabase(IEnumerable<StringEntry> strings, bool overwrite);
     CultureGroupDetailsViewModel GetModules(string culture);
     CultureGroupDetailsViewModel GetTranslations(string culture, string path);
     IEnumerable<StringEntry> GetTranslations(string culture);
@@ -266,7 +266,7 @@ namespace Q42.DbTranslations.Services
       }
     }
 
-    public void SaveStringsToDatabase(IEnumerable<StringEntry> strings)
+    public void SaveStringsToDatabase(IEnumerable<StringEntry> strings, bool overwrite)
     {
       var wc = _wca.GetContext();
       {
@@ -275,7 +275,7 @@ namespace Q42.DbTranslations.Services
         {
           foreach (var s in strings)
           {
-            SaveStringToDatabase(session, s);
+            SaveStringToDatabase(session, s, overwrite);
           }
         }
       }
@@ -287,7 +287,7 @@ namespace Q42.DbTranslations.Services
     /// </summary>
     /// <param name="session"></param>
     /// <param name="input"></param>
-    private void SaveStringToDatabase(ISession session, StringEntry input)
+    private void SaveStringToDatabase(ISession session, StringEntry input, bool overwrite)
     {
       var translatableString =
           (from s in session.Linq<LocalizableStringRecord>()
@@ -321,13 +321,21 @@ namespace Q42.DbTranslations.Services
         var translation =
             (from t in translatableString.Translations
              where t.Culture.Equals(input.Culture)
-             select t).FirstOrDefault() ?? new TranslationRecord
-             {
-               Culture = input.Culture,
-               Value = input.Translation
-             };
-        if (translation.LocalizableStringRecord == null)
+             select t).FirstOrDefault();
+
+        if (translation == null)
+        {
+          translation = new TranslationRecord
+            {
+              Culture = input.Culture,
+              Value = input.Translation
+            };
           translatableString.AddTranslation(translation);
+        }
+        else if (overwrite)
+        {
+          translation.Value = input.Translation;
+        }
         session.SaveOrUpdate(translatableString);
         session.SaveOrUpdate(translation);
       }

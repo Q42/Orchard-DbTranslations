@@ -32,9 +32,14 @@
 <p>&nbsp;</p>
   
 <div class="content">
-  <h2>@T("Import existing *.po files")</h2>
-  <p>@T("Already have translation po files installed? Import them into the database!")</p>
-  @Html.ActionLink("Import!", "ImportCurrentPos", null, new { @class = "button" })
+  @using (Html.BeginForm(new { action = "ImportCurrentPos" }))
+  {
+    @Html.AntiForgeryTokenOrchard()
+    <h2>@T("Import existing *.po files")</h2>
+    <p>@T("Already have translation po files installed? Import them into the database!")</p>
+    <label><input type="checkbox" name="overwrite" value="true" /> overwrite existing values</label>
+    <input type="submit" class="button" value="@T("Import!")" />
+  }
 </div>
 <p>&nbsp;</p>
 
@@ -42,7 +47,7 @@
 <div class="content">
   <h2>@T("Generate from source")</h2>
   <p>@T("Developing a module and want to add new translations to the database?<br />Existing translations will not be altered, only new translatable strings will be added.")</p>
-  @Html.ActionLink("Generate from source", "FromSource", null, new { @class = "button" })
+  @Html.ActionLink(T("Generate from source").Text, "FromSource", null, new { @class = "button" })
 </div>
   
 <p>&nbsp;</p>
@@ -53,6 +58,6 @@
   <form action="@Url.Action("Upload")" method="post" enctype="multipart/form-data">
   @Html.AntiForgeryTokenOrchard()
   <input type="file" class="fileupload" name="pofile" />
-  <input type="submit" class="button" name="submit" value="Upload" />
+  <input type="submit" class="button" name="submit" value="@T("Upload")" />
   </form>
 </div>

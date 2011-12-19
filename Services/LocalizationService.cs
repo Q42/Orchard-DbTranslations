@@ -393,7 +393,7 @@ namespace Q42.DbTranslations.Services
 
     public static string ImportPoText(string input)
     {
-      return input.Replace("\"\"", "\"").Replace("\\\"", "\"");
+      return input.Replace("\"\"", "\"");
     }
 
     public void SavePoFilesToDisk()

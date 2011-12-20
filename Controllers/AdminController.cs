@@ -114,7 +114,7 @@ namespace Q42.DbTranslations.Controllers
       _localizationService.SaveStringsToDatabase(strings, overwrite ?? false);
       Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
       _localizationService.ResetCache();
-      return RedirectToAction("Index");
+      return RedirectToAction("Import");
     }
 
     private ActionResult Log(IEnumerable<StringEntry> strings)
@@ -146,7 +146,7 @@ namespace Q42.DbTranslations.Controllers
       //return Log(strings);
       _localizationService.SaveStringsToDatabase(strings, false);
       _localizationService.ResetCache();
-      return RedirectToAction("Index");
+      return RedirectToAction("Import");
     }
 
     //public ActionResult ImportCachedPo(string culture)
@@ -281,7 +281,7 @@ namespace Q42.DbTranslations.Controllers
         ImportLiveOrchardPo(culture);
 
       _localizationService.ResetCache();
-      return RedirectToAction("Index");
+      return RedirectToAction("Import");
     }
   }
 }

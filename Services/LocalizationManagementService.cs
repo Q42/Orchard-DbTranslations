@@ -38,7 +38,7 @@ namespace Q42.DbTranslations.Services
 
     private static readonly Regex ClassExpression =
         new Regex(
-            @"\s?class ([^\s]*)\s",
+            @"class\s+([^\s:{]+)",
             RegexOptions.Multiline | RegexOptions.Compiled);
 
     public void InstallTranslation(byte[] zippedTranslation, string sitePath)

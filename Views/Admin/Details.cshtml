@@ -41,9 +41,18 @@
       });
     }
 
+    function displayFlushCacheMessage() {
+      if ($('.message-fixed').length)
+        return;
+
+      $('#main').append('<div class="message message-Warning message-fixed">@T("Translation cache needs to be flushed. <a href=\"{0}\">Click here to flush!</a>", Url.Action("FlushCache", "Admin", new { area = "Q42.DbTranslations", redirectUrl = Request.Url.PathAndQuery }))</div>');
+      $('.message-fixed').css('left', ($("body").width() / 2 - $('.message-fixed').width() / 2) + "px");
+    }
+
     function onsuccess(data, textStatus, jqXHR) {
       // todo vinkie
       indicateValidatedCells(false);
+      displayFlushCacheMessage();
     }
   //]]>
   </script>
@@ -70,12 +79,14 @@
   #translations .invalid { background: none; background-color: #FDF5BC; }
   #translations .flux { background: none; background-color: white; }
 
+  .message-fixed { position:fixed; top:-10px; }
+
 </style>
 
 @Html.AntiForgeryTokenOrchard()
 
 <div class="content">
-  @Html.ActionLink("Back to the index", "Culture", new { culture = Model.Culture })
+  @Html.ActionLink(T("Back to {0}", Model.Culture).Text, "Culture", new { culture = Model.Culture })
   <h2>@LocalizationHelpers.GetPoFileName(Model.CurrentGroupPath) in @Model.Culture</h2>
   <div id="translations">
     <table class="items">

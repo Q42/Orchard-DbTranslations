@@ -60,7 +60,21 @@ namespace Q42.DbTranslations.Controllers
         return RedirectToAction("Import");
       return View(model);
     }
-
+    public ActionResult Search(string querystring, string culture)
+    {
+      var cultures = _localizationService.GetCultures();
+      ViewBag.querystring = querystring;
+      ViewBag.culture = culture;
+      if (!string.IsNullOrEmpty(querystring) || !string.IsNullOrEmpty(culture))
+      {
+        var model = _localizationService.Search(culture, querystring);
+        model.CurrentGroupPath = querystring;
+        model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
+                       _localizationService.IsCultureAllowed(culture);
+        ViewBag.Details = model;
+      }
+      return View(cultures);
+    }
 
     public ActionResult Culture(string culture)
     {

@@ -40,6 +40,7 @@ namespace Q42.DbTranslations.Services
     IEnumerable<StringEntry> GetTranslations(string culture);
     void SavePoFilesToDisk(string culture);
     void SavePoFilesToDisk();
+    CultureGroupDetailsViewModel Search(string culture, string querystring);
   }
 
   public class LocalizationService : ILocalizationService, INotificationProvider
@@ -186,6 +187,52 @@ namespace Q42.DbTranslations.Services
       }
     }
 
+    public CultureGroupDetailsViewModel Search(string culture, string querystring)
+    {
+      var model = new CultureGroupDetailsViewModel { Culture = culture };
+
+      var wc = _wca.GetContext();
+      {
+        var _sessionLocator = wc.Resolve<ISessionLocator>();
+        using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
+        {
+          // haalt alle mogelijke strings en description en hun vertaling in culture op
+          var paths = session.CreateSQLQuery(
+            @"  SELECT Localizable.Id,
+              Localizable.StringKey,
+              Localizable.Context,
+              Localizable.OriginalLanguageString,
+              Translation.Value,
+              Localizable.Path
+          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+              ON Localizable.Id = Translation.LocalizableStringRecord_id
+              AND Translation.Culture = :culture
+          WHERE Localizable.OriginalLanguageString LIKE :query 
+              OR Translation.Value LIKE :query")
+            .AddScalar("Id", NHibernateUtil.Int32)
+            .AddScalar("StringKey", NHibernateUtil.String)
+            .AddScalar("Context", NHibernateUtil.String)
+            .AddScalar("OriginalLanguageString", NHibernateUtil.String)
+            .AddScalar("Value", NHibernateUtil.String)
+            .AddScalar("Path", NHibernateUtil.String)
+            .SetParameter("culture", culture)
+            .SetParameter("query", "%" + querystring + "%");
+          model.CurrentGroupTranslations = paths.List<object[]>()
+              .Select(t => new CultureGroupDetailsViewModel.TranslationViewModel
+              {
+                Id = (int)t[0],
+                GroupPath = (string)t[5],
+                Key = (string)t[1],
+                Context = (string)t[2],
+                OriginalString = (string)t[3],
+                LocalString = (string)t[4]
+              }).ToList().GroupBy(t => t.Context);
+        }
+        return model;
+      }
+    }
+ 
     public IEnumerable<StringEntry> GetTranslations(string culture)
     {
       var wc = _wca.GetContext();
@@ -627,5 +674,6 @@ namespace Q42.DbTranslations.Services
     {
       return !_wca.GetContext().HttpContext.Application.AllKeys.Contains("q42TranslationsDirty");
     }
+
   }
 }

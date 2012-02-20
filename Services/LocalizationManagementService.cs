@@ -264,19 +264,27 @@ namespace Q42.DbTranslations.Services
       {
         targetPath = GetModuleLocalizationPath(sitePath, current.Substring(10, current.IndexOf('/', 10) - 10)).ToString();
       }
+      else if (current.StartsWith("~/obj/", StringComparison.OrdinalIgnoreCase))
+      {
+        targetPath = null;
+      }
       else
       {
         targetPath = rootPoPath;
       }
-      yield return new StringEntry
+
+      if (!string.IsNullOrEmpty(targetPath))
       {
-        Culture = null,
-        Context = context,
-        Key = str,
-        English = str,
-        Translation = str,
-        Path = targetPath.Replace('\\', '/')
-      };
+        yield return new StringEntry
+        {
+          Culture = null,
+          Context = context,
+          Key = str,
+          English = str,
+          Translation = str,
+          Path = targetPath.Replace('\\', '/')
+        };
+      }
     }
 
     private static readonly Dictionary<char, char> _escapeTranslations = new Dictionary<char, char> {

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
+using System.Linq;
 using System.Text;
 using Orchard.Caching;
 using Orchard.Environment.Configuration;
 using Orchard.Environment.Extensions;
-using Orchard.Environment.Extensions.Models;
 using Orchard.FileSystems.WebSite;
 using Orchard.Localization.Services;
 
@@ -51,20 +49,20 @@ namespace Q42.DbTranslations.Services
     public string GetLocalizedString(string scope, string text, string cultureName)
     {
       var culture = LoadCulture(cultureName);
-
-      string scopedKey = (scope + "|" + text).ToLowerInvariant();
+      string scopedKey = !string.IsNullOrWhiteSpace(scope) ? (scope + "|" + text).ToLowerInvariant() : text.ToLowerInvariant();
       if (culture.Translations.ContainsKey(scopedKey))
-      {
         return culture.Translations[scopedKey];
-      }
 
       string genericKey = ("|" + text).ToLowerInvariant();
       if (culture.Translations.ContainsKey(genericKey))
-      {
         return culture.Translations[genericKey];
-      }
 
-      return GetParentTranslation(scope, text, cultureName);
+      string retVal = GetParentTranslation(scope, text, cultureName);
+
+      if (retVal == text && culture.Translations.Any(s => s.Key.Contains("|" + scopedKey)))
+        retVal = culture.Translations.First(s => s.Key.Contains("|" + scopedKey)).Value;
+
+      return retVal;
     }
 
     private string GetParentTranslation(string scope, string text, string cultureName)

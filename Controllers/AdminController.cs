@@ -1,21 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
-using System.Linq;
 using Orchard;
 using Orchard.Localization;
 using Orchard.Themes;
-using Q42.DbTranslations.Services;
-using Orchard.Caching;
-using Q42.DbTranslations.Models;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Orchard.UI.Notify;
-using System.Text.RegularExpressions;
-using System.Net;
-using Orchard.Environment.Extensions;
+using Q42.DbTranslations.Models;
+using Q42.DbTranslations.Services;
 
 namespace Q42.DbTranslations.Controllers
 {

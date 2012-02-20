@@ -1,5 +1,4 @@
-﻿using Orchard.Environment.Extensions;
-namespace Q42.DbTranslations.Models
+﻿namespace Q42.DbTranslations.Models
 {
   public class TranslationRecord
   {

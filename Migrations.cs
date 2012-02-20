@@ -1,9 +1,4 @@
-﻿using System.Data;
-using Orchard.ContentManagement;
-using Orchard.ContentManagement.MetaData;
-using Orchard.Core.Contents.Extensions;
-using Orchard.Data.Migration;
-using Q42.DbTranslations.Models;
+﻿using Orchard.Data.Migration;
 
 namespace Q42.DbTranslations
 {

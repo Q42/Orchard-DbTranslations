@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Orchard.Environment.Extensions;
 
 namespace Q42.DbTranslations.Models
 {

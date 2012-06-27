@@ -14,6 +14,7 @@ using Orchard.Themes;
 using Orchard.UI.Notify;
 using Q42.DbTranslations.Models;
 using Q42.DbTranslations.Services;
+using Orchard.Logging;
 
 namespace Q42.DbTranslations.Controllers
 {
@@ -22,6 +23,7 @@ namespace Q42.DbTranslations.Controllers
   {
     private readonly ILocalizationService _localizationService;
 
+    public ILogger Logger { get; set; }
     public Localizer T { get; set; }
     public IOrchardServices Services { get; set; }
     public ILocalizationManagementService ManagementService { get; set; }
@@ -34,6 +36,7 @@ namespace Q42.DbTranslations.Controllers
       _localizationService = localizationService;
       Services = services;
       T = NullLocalizer.Instance;
+      Logger = NullLogger.Instance;
       ManagementService = managementService;
     }
 
@@ -108,21 +111,24 @@ namespace Q42.DbTranslations.Controllers
           Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
 
-
       List<StringEntry> strings = new List<StringEntry>();
       var files = Directory.GetFiles(Server.MapPath("~"), "*.po", SearchOption.AllDirectories);
       foreach (var file in files)
       {
         var match = cultureRegex.Match(file);
         if (!match.Success || match.Groups.Count < 2)
-          throw new Exception("Cannot find culture in path " + file);
-        string culture = match.Groups[1].Value;
-        string path = new Fluent.IO.Path(file).MakeRelativeTo(new Fluent.IO.Path(Server.MapPath("~"))).ToString().Replace('\\', '/');
+        {
+          Logger.Error("Importing current PO's; cannot find culture in path " + file);
+        }
+        else
+        {
+          string culture = match.Groups[1].Value;
+          string path = new Fluent.IO.Path(file).MakeRelativeTo(new Fluent.IO.Path(Server.MapPath("~"))).ToString().Replace('\\', '/');
 
-        strings.AddRange(_localizationService.TranslateFile(path, System.IO.File.ReadAllText(file, Encoding.UTF8), culture));
+          strings.AddRange(_localizationService.TranslateFile(path, System.IO.File.ReadAllText(file, Encoding.UTF8), culture));
+        }
       }
 
-      //return Log(strings);
       _localizationService.SaveStringsToDatabase(strings, overwrite ?? false);
       Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
       _localizationService.ResetCache();

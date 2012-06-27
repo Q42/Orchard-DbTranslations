@@ -244,46 +244,51 @@ namespace Q42.DbTranslations.Services
         string str)
     {
       var current = "~/" + path.MakeRelativeTo(currentInputPath).ToString().Replace('\\', '/');
-      var context = current;
-      if (path.Extension == ".cs")
+      
+      // exclude items from the /obj/ directories, this is where packages reside
+      if (!path.FullPath.Contains("\\obj\\"))
       {
-        var ns = NamespaceExpression.Match(contents).Groups[1].ToString();
-        var type = ClassExpression.Match(contents).Groups[1].ToString();
-        context = ns + "." + type;
-      }
-      string targetPath;
-      if (current.StartsWith("~/core/", StringComparison.OrdinalIgnoreCase))
-      {
-        targetPath = corePoPath;
-      }
-      else if (current.StartsWith("~/themes/", StringComparison.OrdinalIgnoreCase))
-      {
-        targetPath = GetThemeLocalizationPath(sitePath, current.Substring(9, current.IndexOf('/', 9) - 9)).ToString();
-      }
-      else if (current.StartsWith("~/modules/", StringComparison.OrdinalIgnoreCase))
-      {
-        targetPath = GetModuleLocalizationPath(sitePath, current.Substring(10, current.IndexOf('/', 10) - 10)).ToString();
-      }
-      else if (current.StartsWith("~/obj/", StringComparison.OrdinalIgnoreCase))
-      {
-        targetPath = null;
-      }
-      else
-      {
-        targetPath = rootPoPath;
-      }
-
-      if (!string.IsNullOrEmpty(targetPath))
-      {
-        yield return new StringEntry
+        var context = current;
+        if (path.Extension == ".cs")
         {
-          Culture = null,
-          Context = context,
-          Key = str,
-          English = str,
-          Translation = str,
-          Path = targetPath.Replace('\\', '/')
-        };
+          var ns = NamespaceExpression.Match(contents).Groups[1].ToString();
+          var type = ClassExpression.Match(contents).Groups[1].ToString();
+          context = ns + "." + type;
+        }
+        string targetPath;
+        if (current.StartsWith("~/core/", StringComparison.OrdinalIgnoreCase))
+        {
+          targetPath = corePoPath;
+        }
+        else if (current.StartsWith("~/themes/", StringComparison.OrdinalIgnoreCase))
+        {
+          targetPath = GetThemeLocalizationPath(sitePath, current.Substring(9, current.IndexOf('/', 9) - 9)).ToString();
+        }
+        else if (current.StartsWith("~/modules/", StringComparison.OrdinalIgnoreCase))
+        {
+          targetPath = GetModuleLocalizationPath(sitePath, current.Substring(10, current.IndexOf('/', 10) - 10)).ToString();
+        }
+        else if (current.StartsWith("~/obj/", StringComparison.OrdinalIgnoreCase))
+        {
+          targetPath = null;
+        }
+        else
+        {
+          targetPath = rootPoPath;
+        }
+
+        if (!string.IsNullOrEmpty(targetPath))
+        {
+          yield return new StringEntry
+          {
+            Culture = null,
+            Context = context,
+            Key = str,
+            English = str,
+            Translation = str,
+            Path = targetPath.Replace('\\', '/')
+          };
+        }
       }
     }
 
@@ -339,65 +344,75 @@ namespace Q42.DbTranslations.Services
 
     private static readonly Regex FeatureNameExpression = new Regex(@"^\s+([^\s:]+):\s*$");
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="poPath">PO file that the translation would be in traditional po setup</param>
+    /// <param name="manifest">content of the manifest file</param>
+    /// <param name="manifestPath">path to the manifest file</param>
+    /// <param name="rootPath">path to the root of the site</param>
+    /// <returns></returns>
     private static IEnumerable<StringEntry> ExtractPoFromManifest(
         string poPath,
         string manifest,
         Path manifestPath,
         Path rootPath)
     {
-
-      var context = "~/" + manifestPath.MakeRelativeTo(rootPath).ToString()
-                               .Replace('\\', '/');
-      var reader = new StringReader(manifest);
-      string line;
-      while ((line = reader.ReadLine()) != null)
+      if (!manifestPath.FullPath.Contains("\\obj\\"))
       {
-        var split = line.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim()).ToArray();
-        if (split.Length == 2)
+        var context = "~/" + manifestPath.MakeRelativeTo(rootPath).ToString()
+                                 .Replace('\\', '/');
+        var reader = new StringReader(manifest);
+        string line;
+        while ((line = reader.ReadLine()) != null)
         {
-          var key = split[0];
-          if (new[] { "Name", "Description", "Author", "Website", "Tags" }.Contains(key))
+          var split = line.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries)
+              .Select(s => s.Trim()).ToArray();
+          if (split.Length == 2)
           {
-            var value = split[1];
-            yield return new StringEntry
-            {
-              Culture = null,
-              Context = context,
-              Key = key,
-              English = value,
-              Translation = value,
-              Path = poPath.Replace('\\', '/')
-            };
-          }
-        }
-        if (line.StartsWith("Features:"))
-        {
-          var feature = "";
-          while ((line = reader.ReadLine()) != null)
-          {
-            var match = FeatureNameExpression.Match(line);
-            if (match.Success)
-            {
-              feature = match.Groups[1].Value;
-              continue;
-            }
-            split = line.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim()).ToArray();
-            if (split.Length != 2) continue;
             var key = split[0];
-            if (new[] { "Name", "Description", "Category" }.Contains(key))
+            if (new[] { "Name", "Description", "Author", "Website", "Tags" }.Contains(key))
             {
               var value = split[1];
               yield return new StringEntry
               {
                 Culture = null,
                 Context = context,
-                Key = feature + "." + key,
+                Key = key,
                 English = value,
                 Translation = value,
                 Path = poPath.Replace('\\', '/')
               };
+            }
+          }
+          if (line.StartsWith("Features:"))
+          {
+            var feature = "";
+            while ((line = reader.ReadLine()) != null)
+            {
+              var match = FeatureNameExpression.Match(line);
+              if (match.Success)
+              {
+                feature = match.Groups[1].Value;
+                continue;
+              }
+              split = line.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries)
+                  .Select(s => s.Trim()).ToArray();
+              if (split.Length != 2) continue;
+              var key = split[0];
+              if (new[] { "Name", "Description", "Category" }.Contains(key))
+              {
+                var value = split[1];
+                yield return new StringEntry
+                {
+                  Culture = null,
+                  Context = context,
+                  Key = feature + "." + key,
+                  English = value,
+                  Translation = value,
+                  Path = poPath.Replace('\\', '/')
+                };
+              }
             }
           }
         }

@@ -16,6 +16,7 @@ using Orchard.UI.Admin.Notification;
 using Orchard.UI.Notify;
 using Q42.DbTranslations.Models;
 using Q42.DbTranslations.ViewModels;
+using Orchard.Environment.Configuration;
 
 namespace Q42.DbTranslations.Services
 {
@@ -48,10 +49,12 @@ namespace Q42.DbTranslations.Services
     private readonly ICacheManager _cacheManager;
     private readonly ISignals _signals;
     private readonly IOrchardServices _services;
+	private readonly ShellSettings _shellSettings;
 
     public LocalizationService(IWorkContextAccessor wca, ICultureManager cultureManager,
-      ICacheManager cacheManager, ISignals signals, IOrchardServices services)
+	  ICacheManager cacheManager, ISignals signals, IOrchardServices services, ShellSettings shellSettings)
     {
+		_shellSettings = shellSettings;
       _services = services;
       _signals = signals;
       T = NullLocalizer.Instance;
@@ -59,6 +62,12 @@ namespace Q42.DbTranslations.Services
       _cultureManager = cultureManager;
       _cacheManager = cacheManager;
     }
+
+	private string DataTablePrefix()
+	{
+		if (string.IsNullOrEmpty(_shellSettings.DataTablePrefix)) return string.Empty;
+		return _shellSettings.DataTablePrefix + "_";
+	}
 
     public CultureDetailsViewModel GetCultureDetailsViewModel(string culture)
     {
@@ -68,10 +77,10 @@ namespace Q42.DbTranslations.Services
         var _sessionLocator = wc.Resolve<ISessionLocator>();
         using (var session = _sessionLocator.For(typeof(LocalizableStringRecord)))
         {
-          var query = session.CreateQuery(@"
+          var query = session.CreateQuery(string.Format(@"
                     select s
-                    from Q42.DbTranslations.Models.LocalizableStringRecord as s fetch all properties
-                    order by s.Path");
+                    from {0}Q42.DbTranslations.Models.LocalizableStringRecord as s fetch all properties
+                    order by s.Path", DataTablePrefix()));
           var currentPath = "";
           var group = default(CultureDetailsViewModel.TranslationGroupViewModel);
           foreach (LocalizableStringRecord s in query.Enumerable())
@@ -116,15 +125,15 @@ namespace Q42.DbTranslations.Services
         {
           // haal alle mogelijke strings, en hun vertaling in deze culture uit db
           var paths = session.CreateSQLQuery(
-                  @"  SELECT Localizable.Path,
+                  string.Format(@"  SELECT Localizable.Path,
                         COUNT(Localizable.Id) AS TotalCount,
                         COUNT(Translation.Id) AS TranslatedCount
-                    FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
-                    LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+                    FROM {0}Q42_DbTranslations_LocalizableStringRecord AS Localizable
+                    LEFT OUTER JOIN {0}Q42_DbTranslations_TranslationRecord AS Translation
                         ON Localizable.Id = Translation.LocalizableStringRecord_id
                         AND Translation.Culture = :culture
                     GROUP BY Localizable.Path
-                    ORDER BY Localizable.Path")
+                    ORDER BY Localizable.Path", DataTablePrefix()))
               .AddScalar("Path", NHibernateUtil.String)
               .AddScalar("TotalCount", NHibernateUtil.Int32)
               .AddScalar("TranslatedCount", NHibernateUtil.Int32)
@@ -152,16 +161,16 @@ namespace Q42.DbTranslations.Services
         {
           // haalt alle mogelijke strings en description en hun vertaling in culture op
           var paths = session.CreateSQLQuery(
-            @"  SELECT Localizable.Id,
+            string.Format(@"  SELECT Localizable.Id,
               Localizable.StringKey,
               Localizable.Context,
               Localizable.OriginalLanguageString,
               Translation.Value
-          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
-          LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+          FROM {0}Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          LEFT OUTER JOIN {0}Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
               AND Translation.Culture = :culture
-          WHERE Localizable.Path = :path")
+          WHERE Localizable.Path = :path", DataTablePrefix()))
             .AddScalar("Id", NHibernateUtil.Int32)
             .AddScalar("StringKey", NHibernateUtil.String)
             .AddScalar("Context", NHibernateUtil.String)
@@ -195,18 +204,18 @@ namespace Q42.DbTranslations.Services
         {
           // haalt alle mogelijke strings en description en hun vertaling in culture op
           var paths = session.CreateSQLQuery(
-            @"  SELECT Localizable.Id,
+            string.Format(@"  SELECT Localizable.Id,
               Localizable.StringKey,
               Localizable.Context,
               Localizable.OriginalLanguageString,
               Translation.Value,
               Localizable.Path
-          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
-          LEFT OUTER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+          FROM {0}Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          LEFT OUTER JOIN {0}Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
               AND Translation.Culture = :culture
           WHERE Localizable.OriginalLanguageString LIKE :query 
-              OR Translation.Value LIKE :query")
+              OR Translation.Value LIKE :query", DataTablePrefix()))
             .AddScalar("Id", NHibernateUtil.Int32)
             .AddScalar("StringKey", NHibernateUtil.String)
             .AddScalar("Context", NHibernateUtil.String)
@@ -239,14 +248,14 @@ namespace Q42.DbTranslations.Services
         {
           // haalt alle mogelijke strings en description en hun vertaling in culture op
           var paths = session.CreateSQLQuery(
-            @"  SELECT 
+            string.Format(@"  SELECT 
               Localizable.StringKey,
               Localizable.Context,
               Translation.Value
-          FROM Q42_DbTranslations_LocalizableStringRecord AS Localizable
-          INNER JOIN Q42_DbTranslations_TranslationRecord AS Translation
+          FROM {0}Q42_DbTranslations_LocalizableStringRecord AS Localizable
+          INNER JOIN {0}Q42_DbTranslations_TranslationRecord AS Translation
               ON Localizable.Id = Translation.LocalizableStringRecord_id
-              AND Translation.Culture = :culture")
+              AND Translation.Culture = :culture", DataTablePrefix()))
             .AddScalar("StringKey", NHibernateUtil.String)
             .AddScalar("Context", NHibernateUtil.String)
             .AddScalar("Value", NHibernateUtil.String)

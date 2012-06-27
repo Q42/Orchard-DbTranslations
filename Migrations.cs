@@ -27,8 +27,10 @@ namespace Q42.DbTranslations
               .Column<string>("Value", column => column.WithLength(4000))
               .Column<int>("LocalizableStringRecord_Id")
           )
+		  //ForeignKey names must be unique, so enforce this using part of GUID
+		  //Goes wrong when multitenancy is used with table prefixes in same database
           .CreateForeignKey(
-              "FK_Po_Translation_LocalizableString",
+			  string.Format("FK_Po_Translation_LocalizableString_{0}", System.Guid.NewGuid().ToString("N").Substring(0, 16).ToUpper()),
               "Q42.DbTranslations", "TranslationRecord",
               new[] { "LocalizableStringRecord_Id" },
               "Q42.DbTranslations", "LocalizableStringRecord",

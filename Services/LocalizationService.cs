@@ -343,7 +343,7 @@ namespace Q42.DbTranslations.Services
     private void SaveStringToDatabase(ISession session, StringEntry input, bool overwrite)
     {
       var translatableString =
-          (from s in session.Linq<LocalizableStringRecord>()
+          (from s in session.Query<LocalizableStringRecord>()
            where s.StringKey == input.Key
               && s.Context == input.Context
            select s).FirstOrDefault();
@@ -504,7 +504,7 @@ namespace Q42.DbTranslations.Services
         var _sessionLocator = wc.Resolve<ISessionLocator>();
         using (var session = _sessionLocator.For(typeof(TranslationRecord)))
         {
-          var cultures = (from t in session.Linq<TranslationRecord>()
+          var cultures = (from t in session.Query<TranslationRecord>()
                           group t by t.Culture
                             into c
                             select new { c.First().Culture }
@@ -525,7 +525,7 @@ namespace Q42.DbTranslations.Services
         using (var session = _sessionLocator.For(typeof(TranslationRecord)))
         {
           var cultures =
-              (from t in session.Linq<TranslationRecord>()
+              (from t in session.Query<TranslationRecord>()
                group t by t.Culture
                  into c
                  select new
@@ -555,7 +555,7 @@ namespace Q42.DbTranslations.Services
 
     private int GetNumberOfTranslatableStrings(ISession session)
     {
-      return (from t in session.Linq<LocalizableStringRecord>() select t).Count();
+      return (from t in session.Query<LocalizableStringRecord>() select t).Count();
     }
 
     public void UpdateTranslation(int id, string culture, string value)

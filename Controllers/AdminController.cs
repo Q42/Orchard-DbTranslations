@@ -15,6 +15,7 @@ using Orchard.UI.Notify;
 using Q42.DbTranslations.Models;
 using Q42.DbTranslations.Services;
 using Orchard.Logging;
+using Orchard.Data;
 
 namespace Q42.DbTranslations.Controllers
 {
@@ -27,17 +28,20 @@ namespace Q42.DbTranslations.Controllers
     public Localizer T { get; set; }
     public IOrchardServices Services { get; set; }
     public ILocalizationManagementService ManagementService { get; set; }
+    public IRepository<LocalizableStringRecord> Repo {get;set;}
 
     public AdminController(
       ILocalizationService localizationService,
       IOrchardServices services,
-      ILocalizationManagementService managementService)
+      ILocalizationManagementService managementService,
+      IRepository<LocalizableStringRecord> repo)
     {
       _localizationService = localizationService;
       Services = services;
       T = NullLocalizer.Instance;
       Logger = NullLogger.Instance;
       ManagementService = managementService;
+      Repo = repo;
     }
 
     public ActionResult Index()
@@ -217,6 +221,25 @@ namespace Q42.DbTranslations.Controllers
 
       _localizationService.ResetCache();
       return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    public ActionResult ManualAdd(LocalizableStringRecord record)
+    {
+      //var rec2 = Repo.Fetch(c => true).First();
+      if (String.IsNullOrWhiteSpace(record.Context) ||
+        String.IsNullOrWhiteSpace(record.StringKey) ||
+        String.IsNullOrWhiteSpace(record.Path))
+      {
+        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Error, T("Missing required information"));
+      }
+      else
+      {
+        record.OriginalLanguageString = record.StringKey;
+        Repo.Create(record);
+        Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Added 1 translation: {0}", record.OriginalLanguageString));
+      }
+      return RedirectToAction("Import");
     }
 
     [HttpPost]

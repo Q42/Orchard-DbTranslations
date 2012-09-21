@@ -56,8 +56,25 @@
   <h2>@T("Upload a new or updated translation file"):</h2>
   <p>@T("The community is constantly adding new languages and translations, downloadable at <a target=\"_blank\" href=\"http://www.orchardproject.net/localize\">orchardproject.net/localize</a>. You can import the newest version of these *.po.zip files here.")</p>
   <form action="@Url.Action("Upload")" method="post" enctype="multipart/form-data">
-  @Html.AntiForgeryTokenOrchard()
-  <input type="file" class="fileupload" name="pofile" />
-  <input type="submit" class="button" name="submit" value="@T("Upload")" />
+    @Html.AntiForgeryTokenOrchard()
+    <input type="file" class="fileupload" name="pofile" />
+    <input type="submit" class="button" name="submit" value="@T("Upload")" />
+  </form>
+</div>
+
+<p>&nbsp;</p>
+<div class="content">
+  <h2>@T("Manually add translations")</h2>
+  <p>@T("Missing a specific translation? Add it here!")</p>
+  <form action="@Url.Action("ManualAdd")" method="post">
+    @Html.AntiForgeryTokenOrchard()
+    <label>@T("Context (i.e. ~/Core/Common/Module.txt)")</label>
+    <input type="text" name="record.Context" placeholder="@T("Context")" />
+    <label>@T("Path of the file (i.e. Core/App_Data/Localization/{0}/orchard.core.po)")</label>
+    <input type="text" name="record.Path" placeholder="@T("Path")" />
+    <label>@T("Translatable string (i.e. 'Translate me!')")</label>
+    <input type="text" name="record.StringKey" placeholder="@T("Translatable string")" />
+    <br />
+    <input type="submit" class="button" name="submit" value="@T("Submit")" />
   </form>
 </div>

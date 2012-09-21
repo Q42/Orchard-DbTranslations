@@ -1,4 +1,5 @@
 ﻿using Orchard.Data.Migration;
+using Q42.DbTranslations.Models;
 
 namespace Q42.DbTranslations
 {
@@ -8,7 +9,7 @@ namespace Q42.DbTranslations
     public int Create()
     {
       SchemaBuilder.CreateTable(
-          "LocalizableStringRecord",
+          typeof(LocalizableStringRecord).Name,
           table =>
           table
               .Column<int>("Id", column => column.PrimaryKey().Identity())
@@ -19,7 +20,7 @@ namespace Q42.DbTranslations
                               column => column.WithLength(4000))
           );
       SchemaBuilder.CreateTable(
-          "TranslationRecord",
+          typeof(TranslationRecord).Name,
           table =>
           table
               .Column<int>("Id", column => column.PrimaryKey().Identity())
@@ -31,12 +32,13 @@ namespace Q42.DbTranslations
 		  //Goes wrong when multitenancy is used with table prefixes in same database
           .CreateForeignKey(
 			  string.Format("FK_Po_Translation_LocalizableString_{0}", System.Guid.NewGuid().ToString("N").Substring(0, 16).ToUpper()),
-              "Q42.DbTranslations", "TranslationRecord",
+              "Q42.DbTranslations", typeof(TranslationRecord).Name,
               new[] { "LocalizableStringRecord_Id" },
-              "Q42.DbTranslations", "LocalizableStringRecord",
+              "Q42.DbTranslations", typeof(LocalizableStringRecord).Name,
               new[] { "Id" });
+
       SchemaBuilder.AlterTable(
-          "TranslationRecord",
+          typeof(TranslationRecord).Name,
           table => table.CreateIndex(
               "Index_Po_Translation_LocalizableStringRecord_Id",
               "LocalizableStringRecord_Id"));

@@ -46,6 +46,8 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult Index()
     {
+      if (!Services.Authorizer.Authorize(Permissions.Translate))
+        return new HttpUnauthorizedResult();
       var model = _localizationService.GetCultures();
       if (model.TranslationStates.Count == 0)
         return RedirectToAction("Import");
@@ -53,13 +55,15 @@ namespace Q42.DbTranslations.Controllers
     }
     public ActionResult Import()
     {
-      if (!Services.Authorizer.Authorize(Permissions.UploadTranslation))
-        return RedirectToAction("Index");
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
       var model = _localizationService.GetCultures();
       return View(model);
     }
     public ActionResult Export()
     {
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
       var model = _localizationService.GetCultures();
       if (model.TranslationStates.Count == 0)
         return RedirectToAction("Import");
@@ -67,6 +71,8 @@ namespace Q42.DbTranslations.Controllers
     }
     public ActionResult Search(string querystring, string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.Translate))
+        return new HttpUnauthorizedResult();
       var cultures = _localizationService.GetCultures();
       ViewBag.querystring = querystring;
       ViewBag.culture = culture;
@@ -74,7 +80,7 @@ namespace Q42.DbTranslations.Controllers
       {
         var model = _localizationService.Search(culture, querystring);
         model.CurrentGroupPath = querystring;
-        model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
+        model.CanTranslate = Services.Authorizer.Authorize(Permissions.ImportExport) &&
                        _localizationService.IsCultureAllowed(culture);
         ViewBag.Details = model;
       }
@@ -83,21 +89,25 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult Culture(string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.Translate))
+        return new HttpUnauthorizedResult();
       if (culture == null) throw new HttpException(404, "Not found");
       new CultureInfo(culture); // Throws if invalid culture
       var model = _localizationService.GetModules(culture);
-      model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
+      model.CanTranslate = Services.Authorizer.Authorize(Permissions.ImportExport) &&
                            _localizationService.IsCultureAllowed(culture);
       return View(model);
     }
 
     public ActionResult Details(string path, string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.Translate))
+        return new HttpUnauthorizedResult();
       if (culture == null) throw new HttpException(404, "Not found");
       new CultureInfo(culture); // Throws if invalid culture
       var model = _localizationService.GetTranslations(culture, path);
       model.CurrentGroupPath = path;
-      model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
+      model.CanTranslate = Services.Authorizer.Authorize(Permissions.ImportExport) &&
                            _localizationService.IsCultureAllowed(culture);
       return View(model);
     }
@@ -112,7 +122,7 @@ namespace Q42.DbTranslations.Controllers
     public ActionResult ImportCurrentPos(bool? overwrite)
     {
       if (!Services.Authorizer.Authorize(
-          Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
+          Permissions.ImportExport, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
 
       List<StringEntry> strings = new List<StringEntry>();
@@ -160,6 +170,8 @@ namespace Q42.DbTranslations.Controllers
     /// <returns></returns>
     public ActionResult ImportLiveOrchardPo(string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
       IEnumerable<StringEntry> strings;
       var url = "http://www.orchardproject.net/Localize/download/" + culture;
       var req = HttpWebRequest.Create(url);
@@ -203,7 +215,7 @@ namespace Q42.DbTranslations.Controllers
     public ActionResult Upload()
     {
       if (!Services.Authorizer.Authorize(
-          Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
+          Permissions.ImportExport, T("You are not allowed to upload translations.")))
         return new HttpUnauthorizedResult();
 
       var strings = new List<StringEntry>();
@@ -226,6 +238,8 @@ namespace Q42.DbTranslations.Controllers
     [HttpPost]
     public ActionResult ManualAdd(LocalizableStringRecord record)
     {
+      if (!Services.Authorizer.Authorize(Permissions.Translate))
+        return new HttpUnauthorizedResult();
       //var rec2 = Repo.Fetch(c => true).First();
       if (String.IsNullOrWhiteSpace(record.Context) ||
         String.IsNullOrWhiteSpace(record.StringKey) ||
@@ -281,6 +295,9 @@ namespace Q42.DbTranslations.Controllers
     /// <returns></returns>
     public ActionResult Download(string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
+
       //var cachePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/orchard." + culture + ".po.zip");
       byte[] zipBytes = _localizationService.GetZipBytes(culture);
 
@@ -297,6 +314,8 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult PoFilesToDisk()
     {
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
       _localizationService.SavePoFilesToDisk();
       Services.Notifier.Add(NotifyType.Information, T("*.po files saved to disk"));
       return RedirectToAction("Export");
@@ -312,6 +331,8 @@ namespace Q42.DbTranslations.Controllers
 
     public ActionResult FromSource(string culture)
     {
+      if (!Services.Authorizer.Authorize(Permissions.ImportExport))
+        return new HttpUnauthorizedResult();
       var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~")).ToList();
       //return Log(translations);
       _localizationService.SaveStringsToDatabase(translations, false);

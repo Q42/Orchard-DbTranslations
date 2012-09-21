@@ -49,12 +49,12 @@ namespace Q42.DbTranslations.Services
     private readonly ICacheManager _cacheManager;
     private readonly ISignals _signals;
     private readonly IOrchardServices _services;
-	private readonly ShellSettings _shellSettings;
+    private readonly ShellSettings _shellSettings;
 
     public LocalizationService(IWorkContextAccessor wca, ICultureManager cultureManager,
-	  ICacheManager cacheManager, ISignals signals, IOrchardServices services, ShellSettings shellSettings)
+    ICacheManager cacheManager, ISignals signals, IOrchardServices services, ShellSettings shellSettings)
     {
-		_shellSettings = shellSettings;
+      _shellSettings = shellSettings;
       _services = services;
       _signals = signals;
       T = NullLocalizer.Instance;
@@ -63,11 +63,11 @@ namespace Q42.DbTranslations.Services
       _cacheManager = cacheManager;
     }
 
-	private string DataTablePrefix()
-	{
-		if (string.IsNullOrEmpty(_shellSettings.DataTablePrefix)) return string.Empty;
-		return _shellSettings.DataTablePrefix + "_";
-	}
+    private string DataTablePrefix()
+    {
+      if (string.IsNullOrEmpty(_shellSettings.DataTablePrefix)) return string.Empty;
+      return _shellSettings.DataTablePrefix + "_";
+    }
 
     public CultureDetailsViewModel GetCultureDetailsViewModel(string culture)
     {
@@ -238,7 +238,7 @@ namespace Q42.DbTranslations.Services
         return model;
       }
     }
- 
+
     public IEnumerable<StringEntry> GetTranslations(string culture)
     {
       var wc = _wca.GetContext();
@@ -665,20 +665,28 @@ namespace Q42.DbTranslations.Services
       }
     }
 
+    /// <summary>
+    /// specific cachekey for this tenant
+    /// </summary>
+    private string CacheKey()
+    {
+      return String.Format("q42TranslationsDirty{0}", _shellSettings.Name);
+    }
+
     public void ResetCache()
     {
-      _signals.Trigger("culturesChanged");
-      _wca.GetContext().HttpContext.Application.Remove("q42TranslationsDirty");
+      _signals.Trigger("culturesChanged" + _shellSettings.Name);
+      _wca.GetContext().HttpContext.Application.Remove(CacheKey());
     }
 
     private void SetCacheInvalid()
     {
-      _wca.GetContext().HttpContext.Application["q42TranslationsDirty"] = true;
+      _wca.GetContext().HttpContext.Application[CacheKey()] = true;
     }
 
     private bool IsCacheValid()
     {
-      return !_wca.GetContext().HttpContext.Application.AllKeys.Contains("q42TranslationsDirty");
+      return !_wca.GetContext().HttpContext.Application.AllKeys.Contains(CacheKey());
     }
 
   }

@@ -8,6 +8,7 @@ using Fluent.Zip;
 using Orchard;
 using Q42.DbTranslations.Models;
 using Path = Fluent.IO.Path;
+using Orchard.Logging;
 
 namespace Q42.DbTranslations.Services
 {
@@ -21,6 +22,13 @@ namespace Q42.DbTranslations.Services
 
   public class LocalizationManagementService : ILocalizationManagementService
   {
+
+    private ILogger Logger;
+    public LocalizationManagementService()
+    {
+      Logger = NullLogger.Instance;
+    }
+
     private static readonly Regex ResourceStringExpression =
         new Regex(
             @"T\(((@"".*"")|(""([^""\\]|\\.)*?""))([^)""]*)\)",
@@ -234,7 +242,7 @@ namespace Q42.DbTranslations.Services
       }
     }
 
-    private static IEnumerable<StringEntry> DispatchResourceString(
+    private IEnumerable<StringEntry> DispatchResourceString(
         string corePoPath,
         string rootPoPath,
         Path sitePath,
@@ -255,18 +263,32 @@ namespace Q42.DbTranslations.Services
           var type = ClassExpression.Match(contents).Groups[1].ToString();
           context = ns + "." + type;
         }
-        string targetPath;
+        string targetPath = null;
         if (current.StartsWith("~/core/", StringComparison.OrdinalIgnoreCase))
         {
           targetPath = corePoPath;
         }
         else if (current.StartsWith("~/themes/", StringComparison.OrdinalIgnoreCase))
         {
-          targetPath = GetThemeLocalizationPath(sitePath, current.Substring(9, current.IndexOf('/', 9) - 9)).ToString();
+          try
+          {
+            targetPath = GetThemeLocalizationPath(sitePath, current.Substring(9, current.IndexOf('/', 9) - 9)).ToString();
+          }
+          catch (ArgumentOutOfRangeException ex)
+          {
+            Logger.Error(ex, "Error substinging {0}, skipping string {1}!", current, str);
+          }
         }
         else if (current.StartsWith("~/modules/", StringComparison.OrdinalIgnoreCase))
         {
-          targetPath = GetModuleLocalizationPath(sitePath, current.Substring(10, current.IndexOf('/', 10) - 10)).ToString();
+          try
+          {
+            targetPath = GetModuleLocalizationPath(sitePath, current.Substring(10, current.IndexOf('/', 10) - 10)).ToString();
+          }
+          catch (ArgumentOutOfRangeException ex)
+          {
+            Logger.Error(ex, "Error substinging {0}, skipping string {1}!", current, str);
+          }
         }
         else if (current.StartsWith("~/obj/", StringComparison.OrdinalIgnoreCase))
         {

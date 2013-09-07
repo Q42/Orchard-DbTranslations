@@ -7,7 +7,7 @@
 { 
   <script>
     $(document).ready(function () {
-      $('.contribute-banner').live('click', function (e) {
+      $('.contribute-banner').on('click', function (e) {
         e.preventDefault();
         var contInset = $('.contribute-inset');
         if (contInset.hasClass('hidden')) {
@@ -16,7 +16,7 @@
           contInset.fadeOut(200).addClass('hidden');
         }
       });
-      $('.close-inset').live('click', function (e) {
+      $('.close-inset').on('click', function (e) {
         e.preventDefault();
         $('.contribute-inset').fadeOut(200).addClass('hidden');
       });

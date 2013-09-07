@@ -99,7 +99,7 @@ namespace Q42.DbTranslations.Services
     {
       return _cacheManager.Get(culture, ctx =>
       {
-        ctx.Monitor(_signals.When("culturesChanged" + _shellSettings.Name));
+        ctx.Monitor(_signals.When("culturesChanged"));
         return new CultureDictionary
         {
           CultureName = culture,

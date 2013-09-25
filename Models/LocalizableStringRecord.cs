@@ -14,7 +14,7 @@ namespace Q42.DbTranslations.Models
     public virtual string Context { get; set; }
     public virtual string StringKey { get; set; }
     public virtual string OriginalLanguageString { get; set; }
-    public virtual IList<TranslationRecord> Translations { get; protected set; }
+    public virtual IList<TranslationRecord> Translations { get; set; }
 
     public virtual void AddTranslation(TranslationRecord translationRecord)
     {

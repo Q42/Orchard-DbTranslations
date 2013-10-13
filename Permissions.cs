@@ -6,15 +6,15 @@ namespace Q42.DbTranslations
 {
   public class Permissions : IPermissionProvider
   {
-    public static readonly Permission ImportExport = new Permission { Description = "Import / Export translations", Name = "Translations.Upload" };
-    public static readonly Permission Translate = new Permission { Description = "Translate strings", Name = "Translation.Translate", ImpliedBy = new[] { ImportExport } };
+    public static readonly Permission UploadTranslation = new Permission { Description = "Upload new translations", Name = "Upload" };
+    public static readonly Permission Translate = new Permission { Description = "Translate strings", Name = "Translate", ImpliedBy = new[] { UploadTranslation } };
 
     public virtual Feature Feature { get; set; }
 
     public IEnumerable<Permission> GetPermissions()
     {
       return new[] {
-                ImportExport,
+                UploadTranslation,
                 Translate
             };
     }
@@ -24,7 +24,7 @@ namespace Q42.DbTranslations
       return new[] {
                 new PermissionStereotype {
                     Name = "Administrator",
-                    Permissions = new[] { ImportExport, Translate }
+                    Permissions = new[] {UploadTranslation, Translate}
                 }
             };
     }

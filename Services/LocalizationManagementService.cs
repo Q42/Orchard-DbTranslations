@@ -79,7 +79,7 @@ namespace Q42.DbTranslations.Services
         }
 
         /// <summary>
-        /// This method goes through an selected assembly to get all data-Annotations (validation) for that assembly. 
+        /// This method goes through a selected assembly to get all data-Annotations (validation) for that assembly. 
         /// </summary>
         /// <param name="assemblyName">The name (not fullname) of the referenced Assembly</param>
         /// <param name="moduleName">The name (not fullname) of the module where the keys are needed</param>
@@ -93,7 +93,6 @@ namespace Q42.DbTranslations.Services
             var referencedAssembly = AppDomain.CurrentDomain.GetAssemblies().Where(e => e.FullName.Contains(assemblyName)).FirstOrDefault();
             var annotationList = new List<string> {"Required", "RegularExpression", "Range", "StringLength" };
             var path = GetModuleLocalizationPath(null, moduleName).Replace('\\', '/');
-
 
             //Get the Data-Annotations Error Msgs for the Assembly using Reflection
             if(referencedAssembly != null){
@@ -115,7 +114,7 @@ namespace Q42.DbTranslations.Services
                                result.Add(new StringEntry
                                               {
                                                   Culture = null,
-                                                  Context = t.FullName,
+                                                  Context = customAttr.Constructor.DeclaringType.FullName,
                                                   Key = key,
                                                   English = key,
                                                   Translation = key,

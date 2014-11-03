@@ -18,10 +18,8 @@ using Q42.DbTranslations.Models;
 using Q42.DbTranslations.ViewModels;
 using Orchard.Environment.Configuration;
 
-namespace Q42.DbTranslations.Services
-{
-    public interface ILocalizationService : IDependency
-    {
+namespace Q42.DbTranslations.Services {
+    public interface ILocalizationService : IDependency {
         CultureDetailsViewModel GetCultureDetailsViewModel(string culture);
         byte[] GetZipBytes(string culture);
         CultureIndexViewModel GetCultures();
@@ -41,10 +39,9 @@ namespace Q42.DbTranslations.Services
         CultureGroupDetailsViewModel Search(string culture, string querystring);
     }
 
-    public class LocalizationService : ILocalizationService, INotificationProvider
-    {
+    public class LocalizationService : ILocalizationService, INotificationProvider {
         private readonly IWorkContextAccessor _wca;
-        private readonly ISessionLocator _sessionLocator;
+        private readonly Lazy<ISessionLocator> _sessionLocator;
         private readonly ICultureManager _cultureManager;
         private readonly ISignals _signals;
         private readonly ShellSettings _shellSettings;
@@ -52,13 +49,12 @@ namespace Q42.DbTranslations.Services
         private readonly IRepository<LocalizableStringRecord> _localizableStringRepository;
 
         public LocalizationService(IWorkContextAccessor wca,
-            ISessionLocator sessionLocator,
+            Lazy<ISessionLocator> sessionLocator,
             ICultureManager cultureManager,
             ISignals signals,
             ShellSettings shellSettings,
             IRepository<TranslationRecord> translationRepository,
-            IRepository<LocalizableStringRecord> localizableStringRepository)
-        {
+            IRepository<LocalizableStringRecord> localizableStringRepository) {
             _sessionLocator = sessionLocator;
             _shellSettings = shellSettings;
             _signals = signals;
@@ -71,24 +67,19 @@ namespace Q42.DbTranslations.Services
 
         public Localizer T { get; set; }
 
-        private string DataTablePrefix()
-        {
+        private string DataTablePrefix() {
             if (string.IsNullOrEmpty(_shellSettings.DataTablePrefix)) return string.Empty;
             return _shellSettings.DataTablePrefix + "_";
         }
 
-        public CultureDetailsViewModel GetCultureDetailsViewModel(string culture)
-        {
+        public CultureDetailsViewModel GetCultureDetailsViewModel(string culture) {
             var model = new CultureDetailsViewModel { Culture = culture };
             var query = _localizableStringRepository.Table.AsEnumerable();
             var currentPath = "";
             var group = default(CultureDetailsViewModel.TranslationGroupViewModel);
-            foreach (LocalizableStringRecord s in query)
-            {
-                if (s.Path != currentPath)
-                {
-                    group = new CultureDetailsViewModel.TranslationGroupViewModel
-                    {
+            foreach (LocalizableStringRecord s in query) {
+                if (s.Path != currentPath) {
+                    group = new CultureDetailsViewModel.TranslationGroupViewModel {
                         Path = String.Format(s.Path, culture)
                     };
                     if (!group.Path.Contains(culture))
@@ -96,11 +87,9 @@ namespace Q42.DbTranslations.Services
                     model.Groups.Add(group);
                     currentPath = s.Path;
                 }
-                if (group != null)
-                {
+                if (group != null) {
                     var translation = s.Translations.FirstOrDefault(t => t.Culture == culture);
-                    group.Translations.Add(new CultureDetailsViewModel.TranslationViewModel
-                    {
+                    group.Translations.Add(new CultureDetailsViewModel.TranslationViewModel {
                         Context = s.Context,
                         Key = s.StringKey,
                         OriginalString = s.OriginalLanguageString,
@@ -114,10 +103,9 @@ namespace Q42.DbTranslations.Services
 
 
 
-        public CultureGroupDetailsViewModel GetModules(string culture)
-        {
+        public CultureGroupDetailsViewModel GetModules(string culture) {
             var model = new CultureGroupDetailsViewModel { Culture = culture };
-            var session = _sessionLocator.For(typeof(LocalizableStringRecord));
+            var session = _sessionLocator.Value.For(typeof(LocalizableStringRecord));
             var paths = session.CreateSQLQuery(
                 string.Format(@"  SELECT Localizable.Path,
                     COUNT(Localizable.Id) AS TotalCount,
@@ -133,8 +121,7 @@ namespace Q42.DbTranslations.Services
             .AddScalar("TranslatedCount", NHibernateUtil.Int32)
             .SetParameter("culture", culture);
             model.Groups = paths.List<object[]>()
-                .Select(t => new CultureGroupDetailsViewModel.TranslationGroup
-                {
+                .Select(t => new CultureGroupDetailsViewModel.TranslationGroup {
                     Path = (string)t[0],
                     TotalCount = (int)t[1],
                     TranslationCount = (int)t[2],
@@ -142,10 +129,9 @@ namespace Q42.DbTranslations.Services
             return model;
         }
 
-        public CultureGroupDetailsViewModel GetTranslations(string culture, string path)
-        {
+        public CultureGroupDetailsViewModel GetTranslations(string culture, string path) {
             var model = new CultureGroupDetailsViewModel { Culture = culture };
-            var session = _sessionLocator.For(typeof(LocalizableStringRecord));
+            var session = _sessionLocator.Value.For(typeof(LocalizableStringRecord));
             // haalt alle mogelijke strings en description en hun vertaling in culture op
             var paths = session.CreateSQLQuery(
                     string.Format(@"  SELECT Localizable.Id,
@@ -167,8 +153,7 @@ namespace Q42.DbTranslations.Services
                 .SetParameter("path", path);
 
             model.CurrentGroupTranslations = paths.List<object[]>()
-                .Select(t => new CultureGroupDetailsViewModel.TranslationViewModel
-                {
+                .Select(t => new CultureGroupDetailsViewModel.TranslationViewModel {
                     Id = (int)t[0],
                     GroupPath = path,
                     Key = (string)t[1],
@@ -182,10 +167,9 @@ namespace Q42.DbTranslations.Services
             return model;
         }
 
-        public CultureGroupDetailsViewModel Search(string culture, string querystring)
-        {
+        public CultureGroupDetailsViewModel Search(string culture, string querystring) {
             var model = new CultureGroupDetailsViewModel { Culture = culture };
-            var session = _sessionLocator.For(typeof(LocalizableStringRecord));
+            var session = _sessionLocator.Value.For(typeof(LocalizableStringRecord));
             // haalt alle mogelijke strings en description en hun vertaling in culture op
             var paths = session.CreateSQLQuery(
                 string.Format(@"  SELECT Localizable.Id,
@@ -209,8 +193,7 @@ namespace Q42.DbTranslations.Services
                 .SetParameter("culture", culture)
                 .SetParameter("query", "%" + querystring + "%");
             model.CurrentGroupTranslations = paths.List<object[]>()
-                .Select(t => new CultureGroupDetailsViewModel.TranslationViewModel
-                {
+                .Select(t => new CultureGroupDetailsViewModel.TranslationViewModel {
                     Id = (int)t[0],
                     GroupPath = (string)t[5],
                     Key = (string)t[1],
@@ -221,12 +204,10 @@ namespace Q42.DbTranslations.Services
             return model;
         }
 
-        public IEnumerable<StringEntry> GetTranslations(string culture)
-        {
-            var session = _sessionLocator.For(typeof(LocalizableStringRecord));
-            // haalt alle mogelijke strings en description en hun vertaling in culture op
-            //_localizableStringRepository.Table.
-            var paths = session.CreateSQLQuery(
+        public IEnumerable<StringEntry> GetTranslations(string culture) {
+            var session = _sessionLocator.Value.For(typeof(LocalizableStringRecord));
+            
+            return session.CreateSQLQuery(
               string.Format(@"  SELECT 
               Localizable.StringKey,
               Localizable.Context,
@@ -238,51 +219,42 @@ namespace Q42.DbTranslations.Services
               .AddScalar("StringKey", NHibernateUtil.String)
               .AddScalar("Context", NHibernateUtil.String)
               .AddScalar("Value", NHibernateUtil.String)
-              .SetParameter("culture", culture);
-            return paths.List<object[]>()
-                .Select(t => new StringEntry
-                {
-                    Key = (string)t[0],
-                    Context = (string)t[1],
-                    Translation = (string)t[2]
-                }).ToList();
+              .SetParameter("culture", culture)
+            .List<object[]>()
+            .AsParallel()
+            .Select(t => new StringEntry {
+                Key = (string)t[0],
+                Context = (string)t[1],
+                Translation = (string)t[2]
+            })
+            .ToList();
         }
 
 
-        public IEnumerable<StringEntry> TranslateFile(string path, string content, string culture)
-        {
+        public IEnumerable<StringEntry> TranslateFile(string path, string content, string culture) {
             string currentContext = null;
             string currentOriginal = null;
             string currentId = null;
-            using (var textStream = new StringReader(content))
-            {
+            using (var textStream = new StringReader(content)) {
                 string line;
-                while ((line = textStream.ReadLine()) != null)
-                {
-                    if (line.StartsWith("#: "))
-                    {
+                while ((line = textStream.ReadLine()) != null) {
+                    if (line.StartsWith("#: ")) {
                         currentContext = line.Substring(3);
                     }
-                    if (line.StartsWith("msgctxt "))
-                    {
+                    if (line.StartsWith("msgctxt ")) {
                         currentContext = line.Substring(8);
                     }
-                    else if (line.StartsWith("#| msgid \""))
-                    {
+                    else if (line.StartsWith("#| msgid \"")) {
                         currentId = ImportPoText(line.Substring(10, line.Length - 11));
                     }
-                    else if (line.StartsWith("msgid \""))
-                    {
+                    else if (line.StartsWith("msgid \"")) {
                         currentOriginal = ImportPoText(line.Substring(7, line.Length - 8));
                     }
-                    else if (line.StartsWith("msgstr \""))
-                    {
+                    else if (line.StartsWith("msgstr \"")) {
                         var context = currentContext;
                         var translation = ImportPoText(line.Substring(8, line.Length - 9));
-                        if (!string.IsNullOrEmpty(translation))
-                        {
-                            yield return new StringEntry
-                            {
+                        if (!string.IsNullOrEmpty(translation)) {
+                            yield return new StringEntry {
                                 Context = context,
                                 Path = path,
                                 Culture = culture,
@@ -296,10 +268,8 @@ namespace Q42.DbTranslations.Services
             }
         }
 
-        public void SaveStringsToDatabase(IEnumerable<StringEntry> strings, bool overwrite)
-        {
-            foreach (var s in strings)
-            {
+        public void SaveStringsToDatabase(IEnumerable<StringEntry> strings, bool overwrite) {
+            foreach (var s in strings) {
                 SaveStringToDatabase(s, overwrite);
             }
         }
@@ -309,19 +279,16 @@ namespace Q42.DbTranslations.Services
         /// </summary>
         /// <param name="session"></param>
         /// <param name="input"></param>
-        private void SaveStringToDatabase(StringEntry input, bool overwrite)
-        {
+        private void SaveStringToDatabase(StringEntry input, bool overwrite) {
             var translatableString = _localizableStringRepository
                 .Table
                 .FirstOrDefault(s => s.StringKey == input.Key && s.Context == input.Context);
 
-            if (translatableString == null)
-            {
+            if (translatableString == null) {
                 string path = input.Path;
                 if (!path.Contains("{0}") && !string.IsNullOrEmpty(input.Culture))
                     path = path.Replace(input.Culture, "{0}");
-                translatableString = new LocalizableStringRecord
-                {
+                translatableString = new LocalizableStringRecord {
                     Path = path,
                     Context = input.Context,
                     StringKey = input.Key,
@@ -333,23 +300,19 @@ namespace Q42.DbTranslations.Services
 
                 _localizableStringRepository.Create(translatableString);
             }
-            else if (translatableString.OriginalLanguageString != input.English)
-            {
+            else if (translatableString.OriginalLanguageString != input.English) {
                 translatableString.OriginalLanguageString = input.English;
                 _localizableStringRepository.Update(translatableString);
             }
 
-            if (!string.IsNullOrEmpty(input.Culture) && !string.IsNullOrEmpty(input.Translation))
-            {
+            if (!string.IsNullOrEmpty(input.Culture) && !string.IsNullOrEmpty(input.Translation)) {
                 var translation =
                     (from t in translatableString.Translations
                      where t.Culture.Equals(input.Culture)
                      select t).FirstOrDefault();
 
-                if (translation == null)
-                {
-                    translation = new TranslationRecord
-                    {
+                if (translation == null) {
+                    translation = new TranslationRecord {
                         Culture = input.Culture,
                         Value = input.Translation
                     };
@@ -357,8 +320,7 @@ namespace Q42.DbTranslations.Services
 
                     translatableString.AddTranslation(translation);
                 }
-                else if (overwrite)
-                {
+                else if (overwrite) {
                     translation.Value = input.Translation;
                 }
                 _localizableStringRepository.Update(translatableString);
@@ -368,21 +330,16 @@ namespace Q42.DbTranslations.Services
             SetCacheInvalid();
         }
 
-        public byte[] GetZipBytes(string culture)
-        {
+        public byte[] GetZipBytes(string culture) {
             var model = GetCultureDetailsViewModel(culture);
 
             if (model.Groups.Count == 0)
                 return null;
 
-            using (var stream = new MemoryStream())
-            {
-                using (var zip = new ZipOutputStream(stream))
-                {
-                    using (var writer = new StreamWriter(zip, Encoding.UTF8))
-                    {
-                        foreach (var translationGroup in model.Groups)
-                        {
+            using (var stream = new MemoryStream()) {
+                using (var zip = new ZipOutputStream(stream)) {
+                    using (var writer = new StreamWriter(zip, Encoding.UTF8)) {
+                        foreach (var translationGroup in model.Groups) {
                             var file = new ZipEntry(translationGroup.Path) { DateTime = DateTime.Now };
                             zip.PutNextEntry(file);
                             writer.WriteLine(@"# Orchard resource strings - {0}
@@ -391,8 +348,7 @@ namespace Q42.DbTranslations.Services
 # This file is distributed under the BSD license
 # This file is generated using the Q42.DbTranslations module
 ", culture);
-                            foreach (var translation in translationGroup.Translations)
-                            {
+                            foreach (var translation in translationGroup.Translations) {
                                 writer.WriteLine("#: " + ExportPoText(translation.Context));
                                 writer.WriteLine("#| msgid \"" + ExportPoText(translation.Key) + "\"");
                                 writer.WriteLine("msgctx \"" + ExportPoText(translation.Context) + "\"");
@@ -410,32 +366,27 @@ namespace Q42.DbTranslations.Services
             }
         }
 
-        public static string ExportPoText(string input)
-        {
+        public static string ExportPoText(string input) {
             if (input == null) return null;
             return input.Replace("\"", "\\\"");
         }
 
-        public static string ImportPoText(string input)
-        {
+        public static string ImportPoText(string input) {
             return input.Replace("\\\"", "\"");
         }
 
-        public void SavePoFilesToDisk()
-        {
+        public void SavePoFilesToDisk() {
             foreach (var culture in GetTranslatedCultures())
                 SavePoFilesToDisk(culture);
         }
 
-        public void SavePoFilesToDisk(string culture)
-        {
+        public void SavePoFilesToDisk(string culture) {
             var model = GetCultureDetailsViewModel(culture);
 
             if (model.Groups.Count == 0)
                 return;
 
-            foreach (var translationGroup in model.Groups)
-            {
+            foreach (var translationGroup in model.Groups) {
                 string path = Path.Combine(_wca.GetContext().HttpContext.Server.MapPath("~"), translationGroup.Path);
                 var file = new FileInfo(path);
 
@@ -447,16 +398,14 @@ namespace Q42.DbTranslations.Services
                 else if (!file.Directory.Exists)
                     file.Directory.Create();
 
-                using (var writer = File.CreateText(path))
-                {
+                using (var writer = File.CreateText(path)) {
                     writer.WriteLine(@"# Orchard resource strings - {0}
 # Copyright (c) 2010 Outercurve Foundation
 # All rights reserved
 # This file is distributed under the BSD license
 # This file is generated using the Q42.DbTranslations module
 ", culture);
-                    foreach (var translation in translationGroup.Translations)
-                    {
+                    foreach (var translation in translationGroup.Translations) {
                         writer.WriteLine("#: " + ExportPoText(translation.Context));
                         writer.WriteLine("#| msgid \"" + ExportPoText(translation.Key) + "\"");
                         writer.WriteLine("msgctx \"" + ExportPoText(translation.Context) + "\"");
@@ -469,33 +418,28 @@ namespace Q42.DbTranslations.Services
             }
         }
 
-        public IEnumerable<string> GetTranslatedCultures()
-        {
+        public IEnumerable<string> GetTranslatedCultures() {
             return _cultureManager.ListCultures();
         }
 
-        public CultureIndexViewModel GetCultures()
-        {
+        public CultureIndexViewModel GetCultures() {
             var model = new CultureIndexViewModel();
             var cultures = _translationRepository.Table
                     .ToList()
                     .GroupBy(t => t.Culture)
-                    .Select(g => new
-                    {
+                    .Select(g => new {
                         g.First().Culture,
                         Count = g.Count()
                     });
 
-            cultures.ForEach(c =>
-            {
+            cultures.ForEach(c => {
                 model.TranslationStates.Add(
                         c.Culture,
                         new CultureIndexViewModel.CultureTranslationState { NumberOfTranslatedStrings = c.Count });
             });
 
             model.NumberOfStringsInDefaultCulture = GetNumberOfTranslatableStrings();
-            foreach (var cult in _cultureManager.ListCultures())
-            {
+            foreach (var cult in _cultureManager.ListCultures()) {
                 if (!model.TranslationStates.ContainsKey(cult))
                     model.TranslationStates.Add(cult, new CultureIndexViewModel.CultureTranslationState { NumberOfTranslatedStrings = 0 });
             }
@@ -503,23 +447,18 @@ namespace Q42.DbTranslations.Services
             return model;
         }
 
-        private int GetNumberOfTranslatableStrings()
-        {
+        private int GetNumberOfTranslatableStrings() {
             //return (from t in session.Linq<LocalizableStringRecord>() select t).Count();
             return _localizableStringRepository.Table.Count();
         }
 
-        public void UpdateTranslation(int id, string culture, string value)
-        {
+        public void UpdateTranslation(int id, string culture, string value) {
             var localizable = _localizableStringRepository.Get(id);
             var translation = localizable.Translations.Where(t => t.Culture == culture).FirstOrDefault();
 
-            if (translation == null)
-            {
-                if (!String.IsNullOrEmpty(value))
-                {
-                    var newTranslation = new TranslationRecord
-                    {
+            if (translation == null) {
+                if (!String.IsNullOrEmpty(value)) {
+                    var newTranslation = new TranslationRecord {
                         Culture = culture,
                         Value = value,
                         LocalizableStringRecord = localizable
@@ -530,40 +469,33 @@ namespace Q42.DbTranslations.Services
                     SetCacheInvalid();
                 }
             }
-            else if (String.IsNullOrEmpty(value))
-            {
+            else if (String.IsNullOrEmpty(value)) {
                 _translationRepository.Delete(translation);
                 SetCacheInvalid();
             }
-            else if (String.Compare(translation.Value, value) != 0)
-            {
+            else if (String.Compare(translation.Value, value) != 0) {
                 translation.Value = value;
                 _translationRepository.Update(translation);
                 SetCacheInvalid();
             }
         }
 
-        public void RemoveTranslation(int id, string culture)
-        {
+        public void RemoveTranslation(int id, string culture) {
             var translation = _localizableStringRepository.Get(id)
                 .Translations.Where(t => t.Culture == culture).FirstOrDefault();
 
-            if (translation != null)
-            {
+            if (translation != null) {
                 translation.LocalizableStringRecord.Translations.Remove(translation);
                 _translationRepository.Delete(translation);
                 SetCacheInvalid();
             }
         }
 
-        public IEnumerable<StringEntry> GetTranslationsFromZip(Stream stream)
-        {
+        public IEnumerable<StringEntry> GetTranslationsFromZip(Stream stream) {
             var zip = new ZipInputStream(stream);
             ZipEntry zipEntry;
-            while ((zipEntry = zip.GetNextEntry()) != null)
-            {
-                if (zipEntry.IsFile)
-                {
+            while ((zipEntry = zip.GetNextEntry()) != null) {
+                if (zipEntry.IsFile) {
                     var entrySize = (int)zipEntry.Size;
                     // Yeah yeah, but only a handful of people have upload rights here for the moment.
                     var entryBytes = new byte[entrySize];
@@ -577,8 +509,7 @@ namespace Q42.DbTranslations.Services
             }
         }
 
-        public bool IsCultureAllowed(string culture)
-        {
+        public bool IsCultureAllowed(string culture) {
             return true;
 
             // todo wtf?
@@ -587,35 +518,29 @@ namespace Q42.DbTranslations.Services
             //return (rolesPart != null && rolesPart.Roles.Contains(culture));
         }
 
-        public IEnumerable<NotifyEntry> GetNotifications()
-        {
-            if (!IsCacheValid())
-            {
+        public IEnumerable<NotifyEntry> GetNotifications() {
+            if (!IsCacheValid()) {
                 var request = _wca.GetContext().HttpContext.Request;
                 UrlHelper urlHelper = new UrlHelper(request.RequestContext);
                 var currentUrl = request.Url.PathAndQuery;
 
-                yield return new NotifyEntry
-                {
+                yield return new NotifyEntry {
                     Message = T("Translation cache needs to be flushed. <a href=\"{0}\">Click here to flush!</a>", urlHelper.Action("FlushCache", "Admin", new { area = "Q42.DbTranslations", redirectUrl = currentUrl })),
                     Type = NotifyType.Warning
                 };
             }
         }
 
-        public void ResetCache()
-        {
+        public void ResetCache() {
             _signals.Trigger("culturesChanged");
             _wca.GetContext().HttpContext.Application.Remove("q42TranslationsDirty");
         }
 
-        private void SetCacheInvalid()
-        {
+        private void SetCacheInvalid() {
             _wca.GetContext().HttpContext.Application["q42TranslationsDirty"] = true;
         }
 
-        private bool IsCacheValid()
-        {
+        private bool IsCacheValid() {
             return !_wca.GetContext().HttpContext.Application.AllKeys.Contains("q42TranslationsDirty");
         }
     }

@@ -164,9 +164,8 @@ namespace Q42.DbTranslations.Services
                             foreach (var englishTranslation in englishTranslations)
                             {
                                 var entry = englishTranslation;
-                                var translation = translations.Where(
-                                    t => t.Context == entry.Context &&
-                                         t.Key == entry.Key).FirstOrDefault();
+                                var translation = translations.FirstOrDefault(t => t.Context == entry.Context &&
+                                                                                   t.Key == entry.Key);
                                 if (translation == default(StringEntry) ||
                                     translation.Translation == null ||
                                     translation.Translation.Equals(@"msgstr """""))

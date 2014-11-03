@@ -46,10 +46,7 @@ namespace Q42.DbTranslations.Services
         private readonly IWorkContextAccessor _wca;
         private readonly ISessionLocator _sessionLocator;
         private readonly ICultureManager _cultureManager;
-        public Localizer T { get; set; }
-        private readonly ICacheManager _cacheManager;
         private readonly ISignals _signals;
-        private readonly IOrchardServices _services;
         private readonly ShellSettings _shellSettings;
         private readonly IRepository<TranslationRecord> _translationRepository;
         private readonly IRepository<LocalizableStringRecord> _localizableStringRepository;
@@ -57,21 +54,22 @@ namespace Q42.DbTranslations.Services
         public LocalizationService(IWorkContextAccessor wca,
             ISessionLocator sessionLocator,
             ICultureManager cultureManager,
-            ICacheManager cacheManager, ISignals signals, IOrchardServices services, ShellSettings shellSettings,
+            ISignals signals,
+            ShellSettings shellSettings,
             IRepository<TranslationRecord> translationRepository,
             IRepository<LocalizableStringRecord> localizableStringRepository)
         {
             _sessionLocator = sessionLocator;
             _shellSettings = shellSettings;
-            _services = services;
             _signals = signals;
             T = NullLocalizer.Instance;
             _wca = wca;
             _cultureManager = cultureManager;
-            _cacheManager = cacheManager;
             _translationRepository = translationRepository;
             _localizableStringRepository = localizableStringRepository;
         }
+
+        public Localizer T { get; set; }
 
         private string DataTablePrefix()
         {
@@ -100,7 +98,7 @@ namespace Q42.DbTranslations.Services
                 }
                 if (group != null)
                 {
-                    var translation = s.Translations.Where(t => t.Culture == culture).FirstOrDefault();
+                    var translation = s.Translations.FirstOrDefault(t => t.Culture == culture);
                     group.Translations.Add(new CultureDetailsViewModel.TranslationViewModel
                     {
                         Context = s.Context,
@@ -313,9 +311,9 @@ namespace Q42.DbTranslations.Services
         /// <param name="input"></param>
         private void SaveStringToDatabase(StringEntry input, bool overwrite)
         {
-            var translatableString = _localizableStringRepository.Table
-                    .Where(s => s.StringKey == input.Key && s.Context == input.Context)
-                    .FirstOrDefault();
+            var translatableString = _localizableStringRepository
+                .Table
+                .FirstOrDefault(s => s.StringKey == input.Key && s.Context == input.Context);
 
             if (translatableString == null)
             {

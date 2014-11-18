@@ -6,6 +6,7 @@ using System.Text;
 using System.Web.Mvc;
 using ICSharpCode.SharpZipLib.Zip;
 using NHibernate;
+using NHibernate.Linq;
 using NHibernate.Util;
 using Orchard;
 using Orchard.Caching;

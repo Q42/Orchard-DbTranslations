@@ -6,12 +6,13 @@ using System.Text;
 using System.Web.Mvc;
 using ICSharpCode.SharpZipLib.Zip;
 using NHibernate;
-using NHibernate.Linq;
+using NHibernate.Util;
 using Orchard;
 using Orchard.Caching;
 using Orchard.Data;
 using Orchard.Localization;
 using Orchard.Localization.Services;
+using Orchard.Mvc;
 using Orchard.UI.Admin.Notification;
 using Orchard.UI.Notify;
 using Q42.DbTranslations.Models;
@@ -40,7 +41,7 @@ namespace Q42.DbTranslations.Services {
     }
 
     public class LocalizationService : ILocalizationService, INotificationProvider {
-        private readonly IWorkContextAccessor _wca;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Lazy<ISessionLocator> _sessionLocator;
         private readonly ICultureManager _cultureManager;
         private readonly ISignals _signals;
@@ -48,18 +49,18 @@ namespace Q42.DbTranslations.Services {
         private readonly IRepository<TranslationRecord> _translationRepository;
         private readonly IRepository<LocalizableStringRecord> _localizableStringRepository;
 
-        public LocalizationService(IWorkContextAccessor wca,
+        public LocalizationService(IHttpContextAccessor httpContextAccessor,
             Lazy<ISessionLocator> sessionLocator,
             ICultureManager cultureManager,
             ISignals signals,
             ShellSettings shellSettings,
             IRepository<TranslationRecord> translationRepository,
             IRepository<LocalizableStringRecord> localizableStringRepository) {
+            _httpContextAccessor = httpContextAccessor;
             _sessionLocator = sessionLocator;
             _shellSettings = shellSettings;
             _signals = signals;
             T = NullLocalizer.Instance;
-            _wca = wca;
             _cultureManager = cultureManager;
             _translationRepository = translationRepository;
             _localizableStringRepository = localizableStringRepository;
@@ -387,7 +388,7 @@ namespace Q42.DbTranslations.Services {
                 return;
 
             foreach (var translationGroup in model.Groups) {
-                string path = Path.Combine(_wca.GetContext().HttpContext.Server.MapPath("~"), translationGroup.Path);
+                string path = Path.Combine(_httpContextAccessor.Current().Server.MapPath("~"), translationGroup.Path);
                 var file = new FileInfo(path);
 
                 // delete the file if it already exists
@@ -454,7 +455,7 @@ namespace Q42.DbTranslations.Services {
 
         public void UpdateTranslation(int id, string culture, string value) {
             var localizable = _localizableStringRepository.Get(id);
-            var translation = localizable.Translations.Where(t => t.Culture == culture).FirstOrDefault();
+            var translation = localizable.Translations.FirstOrDefault(t => t.Culture == culture);
 
             if (translation == null) {
                 if (!String.IsNullOrEmpty(value)) {
@@ -473,7 +474,7 @@ namespace Q42.DbTranslations.Services {
                 _translationRepository.Delete(translation);
                 SetCacheInvalid();
             }
-            else if (String.Compare(translation.Value, value) != 0) {
+            else if (String.CompareOrdinal(translation.Value, value) != 0) {
                 translation.Value = value;
                 _translationRepository.Update(translation);
                 SetCacheInvalid();
@@ -482,7 +483,7 @@ namespace Q42.DbTranslations.Services {
 
         public void RemoveTranslation(int id, string culture) {
             var translation = _localizableStringRepository.Get(id)
-                .Translations.Where(t => t.Culture == culture).FirstOrDefault();
+                .Translations.FirstOrDefault(t => t.Culture == culture);
 
             if (translation != null) {
                 translation.LocalizableStringRecord.Translations.Remove(translation);
@@ -520,7 +521,7 @@ namespace Q42.DbTranslations.Services {
 
         public IEnumerable<NotifyEntry> GetNotifications() {
             if (!IsCacheValid()) {
-                var request = _wca.GetContext().HttpContext.Request;
+                var request = _httpContextAccessor.Current().Request;
                 UrlHelper urlHelper = new UrlHelper(request.RequestContext);
                 var currentUrl = request.Url.PathAndQuery;
 
@@ -533,15 +534,15 @@ namespace Q42.DbTranslations.Services {
 
         public void ResetCache() {
             _signals.Trigger("culturesChanged");
-            _wca.GetContext().HttpContext.Application.Remove("q42TranslationsDirty");
+            _httpContextAccessor.Current().Application.Remove("q42TranslationsDirty");
         }
 
         private void SetCacheInvalid() {
-            _wca.GetContext().HttpContext.Application["q42TranslationsDirty"] = true;
+            _httpContextAccessor.Current().Application["q42TranslationsDirty"] = true;
         }
 
         private bool IsCacheValid() {
-            return !_wca.GetContext().HttpContext.Application.AllKeys.Contains("q42TranslationsDirty");
+            return !_httpContextAccessor.Current().Application.AllKeys.Contains("q42TranslationsDirty");
         }
     }
 }

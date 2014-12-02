@@ -46,6 +46,10 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\lib\autofac\Autofac.dll</HintPath>
+    </Reference>
     <Reference Include="Fluent.IO, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Libs\Fluent.IO.dll</HintPath>
@@ -114,9 +118,7 @@
     <Compile Include="Models\StringEntry.cs" />
     <Compile Include="Models\TranslationRecord.cs" />
     <Compile Include="Permissions.cs" />
-    <Compile Include="Services\EncodingDetection.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Services\EncodingDetection.cs" />
     <Compile Include="Services\LiveLocalizedStringManager.cs" />
     <Compile Include="Services\LocalizationManagementService.cs">
       <SubType>Code</SubType>

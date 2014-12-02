@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Mvc;
 using Orchard;
+using Orchard.Environment;
 using Orchard.Localization;
 using Orchard.Themes;
 using Orchard.UI.Notify;
@@ -24,26 +25,30 @@ namespace Q42.DbTranslations.Controllers
     public class AdminController : Controller
     {
         private readonly ILocalizationService _localizationService;
-
-        public ILogger Logger { get; set; }
-        public Localizer T { get; set; }
-        public IOrchardServices Services { get; set; }
-        public ILocalizationManagementService ManagementService { get; set; }
+        private readonly IOrchardServices _services;
+        private readonly ILocalizationManagementService _managementService;
         private readonly IExtensionManager _extensionManager;
+        private readonly IHostEnvironment _hostEnvironment;
 
         public AdminController(
                 ILocalizationService localizationService,
                 IOrchardServices services,
                 ILocalizationManagementService managementService,
-                IExtensionManager extensionManager)
+                IExtensionManager extensionManager,
+                IHostEnvironment hostEnvironment)
         {
             _localizationService = localizationService;
-            Services = services;
+            _services = services;
+            _managementService = managementService;
+            _extensionManager = extensionManager;
+            _hostEnvironment = hostEnvironment;
+
             T = NullLocalizer.Instance;
             Logger = NullLogger.Instance;
-            ManagementService = managementService;
-            _extensionManager = extensionManager;
         }
+
+        public Localizer T { get; set; }
+        public ILogger Logger { get; set; }
 
         public ActionResult Index()
         {
@@ -54,7 +59,7 @@ namespace Q42.DbTranslations.Controllers
         }
         public ActionResult Import()
         {
-            if (!Services.Authorizer.Authorize(Permissions.UploadTranslation))
+            if (!_services.Authorizer.Authorize(Permissions.UploadTranslation))
                 return RedirectToAction("Index");
             var model = _localizationService.GetCultures();
 
@@ -83,8 +88,7 @@ namespace Q42.DbTranslations.Controllers
             {
                 var model = _localizationService.Search(culture, querystring);
                 model.CurrentGroupPath = querystring;
-                model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
-                               _localizationService.IsCultureAllowed(culture);
+                model.CanTranslate = _services.Authorizer.Authorize(Permissions.UploadTranslation);
                 ViewBag.Details = model;
             }
             return View(cultures);
@@ -95,8 +99,7 @@ namespace Q42.DbTranslations.Controllers
             if (culture == null) throw new HttpException(404, "Not found");
             new CultureInfo(culture); // Throws if invalid culture
             var model = _localizationService.GetModules(culture);
-            model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
-                                 _localizationService.IsCultureAllowed(culture);
+            model.CanTranslate = _services.Authorizer.Authorize(Permissions.UploadTranslation);
             return View(model);
         }
 
@@ -106,8 +109,7 @@ namespace Q42.DbTranslations.Controllers
             new CultureInfo(culture); // Throws if invalid culture
             var model = _localizationService.GetTranslations(culture, path);
             model.CurrentGroupPath = path;
-            model.CanTranslate = Services.Authorizer.Authorize(Permissions.UploadTranslation) &&
-                                 _localizationService.IsCultureAllowed(culture);
+            model.CanTranslate = _services.Authorizer.Authorize(Permissions.UploadTranslation);
             return View(model);
         }
 
@@ -120,12 +122,12 @@ namespace Q42.DbTranslations.Controllers
         /// <returns></returns>
         public ActionResult ImportCurrentPos(bool? overwrite)
         {
-            if (!Services.Authorizer.Authorize(
+            if (!_services.Authorizer.Authorize(
                 Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
                 return new HttpUnauthorizedResult();
 
             List<StringEntry> strings = new List<StringEntry>();
-            var files = Directory.GetFiles(Server.MapPath("~"), "*.po", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(_hostEnvironment.MapPath("~"), "*.po", SearchOption.AllDirectories);
             foreach (var file in files)
             {
                 var match = cultureRegex.Match(file);
@@ -136,30 +138,16 @@ namespace Q42.DbTranslations.Controllers
                 else
                 {
                     string culture = match.Groups[1].Value;
-                    string path = new Fluent.IO.Path(file).MakeRelativeTo(new Fluent.IO.Path(Server.MapPath("~"))).ToString().Replace('\\', '/');
+                    string path = new Fluent.IO.Path(file).MakeRelativeTo(new Fluent.IO.Path(_hostEnvironment.MapPath("~"))).ToString().Replace('\\', '/');
 
                     strings.AddRange(_localizationService.TranslateFile(path, System.IO.File.ReadAllText(file, Encoding.UTF8), culture));
                 }
             }
 
             _localizationService.SaveStringsToDatabase(strings, overwrite ?? false);
-            Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
+            _services.Notifier.Add(NotifyType.Information, T("Imported {0} translations from {1} *.po files", strings.Count, files.Count()));
             _localizationService.ResetCache();
             return RedirectToAction("Import");
-        }
-
-        private ActionResult Log(IEnumerable<StringEntry> strings)
-        {
-            foreach (var t in strings)
-            {
-                Response.Write("<pre>" + string.Join("\n",
-                  "Path: " + t.Path,
-                  "Context: " + t.Context,
-                  "Key: " + t.Key,
-                  "English: " + t.English,
-                  t.Culture + ": " + t.Translation) + "</pre>");
-            }
-            return new EmptyResult();
         }
 
         /// <summary>
@@ -180,38 +168,10 @@ namespace Q42.DbTranslations.Controllers
             return RedirectToAction("Import");
         }
 
-        //public ActionResult ImportCachedPo(string culture)
-        //{
-        //  if (!Services.Authorizer.Authorize(
-        //      Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
-        //    return new HttpUnauthorizedResult();
-
-        //  var filePath = Server.MapPath("~/Modules/Q42.DbTranslations/Content/cache/orchard." + culture + ".po.zip");
-        //  var file = new FileInfo(filePath);
-        //  if (file.Exists)
-        //  {
-        //    List<StringEntry> strings;
-        //    using (var stream = file.OpenRead())
-        //    {
-        //      strings = _localizationService.GetTranslationsFromZip(stream).ToList();
-        //    }
-        //    //return Log(strings);
-        //    _localizationService.SaveStringsToDatabase(strings);
-        //    Services.Notifier.Add(NotifyType.Information, T("Imported {0} translations in {1}", strings.Count, culture));
-        //  }
-        //  else
-        //  {
-        //    Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Warning, T("File could not be found: {0}", filePath));
-        //  }
-
-        //  _localizationService.ResetCache();
-        //  return RedirectToAction("Index");
-        //}
-
         [HttpPost]
         public ActionResult Upload()
         {
-            if (!Services.Authorizer.Authorize(
+            if (!_services.Authorizer.Authorize(
                 Permissions.UploadTranslation, T("You are not allowed to upload translations.")))
                 return new HttpUnauthorizedResult();
 
@@ -226,7 +186,7 @@ namespace Q42.DbTranslations.Controllers
 
             //return Log(strings);
             _localizationService.SaveStringsToDatabase(strings, false);
-            Services.Notifier.Add(Orchard.UI.Notify.NotifyType.Information, T("Imported {0} translations", strings.Count));
+            _services.Notifier.Information(T("Imported {0} translations", strings.Count));
 
             _localizationService.ResetCache();
             return RedirectToAction("Index");
@@ -236,14 +196,9 @@ namespace Q42.DbTranslations.Controllers
         [ValidateInput(false)]
         public ActionResult Update(int id, string culture, string value)
         {
-            if (!Services.Authorizer.Authorize(
+            if (!_services.Authorizer.Authorize(
                 Permissions.Translate, T("You are not allowed to update translations.")))
                 return new HttpUnauthorizedResult();
-
-            if (!_localizationService.IsCultureAllowed(culture))
-            {
-                return new HttpUnauthorizedResult();
-            }
 
             _localizationService.UpdateTranslation(id, culture, value);
             return new JsonResult { Data = value };
@@ -252,14 +207,10 @@ namespace Q42.DbTranslations.Controllers
         [HttpPost]
         public ActionResult Remove(int id, string culture)
         {
-            if (!Services.Authorizer.Authorize(
+            if (!_services.Authorizer.Authorize(
                 Permissions.Translate, T("You are not allowed to delete translations.")))
                 return new HttpUnauthorizedResult();
 
-            if (!_localizationService.IsCultureAllowed(culture))
-            {
-                return new HttpUnauthorizedResult();
-            }
             _localizationService.RemoveTranslation(id, culture);
             return new JsonResult { Data = null };
         }
@@ -288,7 +239,7 @@ namespace Q42.DbTranslations.Controllers
         public ActionResult PoFilesToDisk()
         {
             _localizationService.SavePoFilesToDisk();
-            Services.Notifier.Add(NotifyType.Information, T("*.po files saved to disk"));
+            _services.Notifier.Information(T("*.po files saved to disk"));
             return RedirectToAction("Export");
         }
 
@@ -302,11 +253,11 @@ namespace Q42.DbTranslations.Controllers
 
         public ActionResult FromSource(string culture)
         {
-            var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~"), null).ToList();
+            var translations = _managementService.ExtractDefaultTranslation(_hostEnvironment.MapPath("~"), null).ToList();
             //return Log(translations);
             _localizationService.SaveStringsToDatabase(translations, false);
 
-            Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
+            _services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
 
             if (!string.IsNullOrEmpty(culture))
                 ImportLiveOrchardPo(culture);
@@ -319,18 +270,18 @@ namespace Q42.DbTranslations.Controllers
         {
             if (String.IsNullOrEmpty(path) || String.IsNullOrEmpty(type))
             {
-                Services.Notifier.Add(NotifyType.Error, T("Invalid request!"));
+                _services.Notifier.Error(T("Invalid request!"));
                 return RedirectToAction("Import");
             }
 
             var featurePath = "module".Equals(type) ? "~/Modules/" : "~/Themes/";
             featurePath += path;
 
-            var translations = ManagementService.ExtractDefaultTranslation(Server.MapPath("~"), Server.MapPath(featurePath)).ToList();
+            var translations = _managementService.ExtractDefaultTranslation(_hostEnvironment.MapPath("~"), _hostEnvironment.MapPath(featurePath)).ToList();
             //return Log(translations);
             _localizationService.SaveStringsToDatabase(translations, false);
 
-            Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count));
+            _services.Notifier.Information(T("Imported {0} translatable strings", translations.Count));
 
             if (!string.IsNullOrEmpty(culture))
                 ImportLiveOrchardPo(culture);

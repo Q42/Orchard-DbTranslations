@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -22,6 +23,9 @@ namespace Q42.DbTranslations.Services {
             _signals = signals;
         }
 
+        private readonly ConcurrentDictionary<string, CultureDictionary> _cultureValue = 
+            new ConcurrentDictionary<string, CultureDictionary>();
+
         // This will translate a string into a string in the target cultureName.
         // The scope portion is optional, it amounts to the location of the file containing 
         // the string in case it lives in a view, or the namespace name if the string lives in a binary.
@@ -29,7 +33,7 @@ namespace Q42.DbTranslations.Services {
         // parent culture as defined in the .net culture hierarchy. e.g. fr-FR will fallback to fr.
         // In case it's not found anywhere, the text is returned as is.
         public string GetLocalizedString(string scope, string text, string cultureName) {
-            var culture = LoadCulture(cultureName);
+            var culture = _cultureValue.GetOrAdd(cultureName, LoadCulture);
 
             string scopedKey = (scope + "|" + text).ToLowerInvariant();
             if (culture.Translations.ContainsKey(scopedKey)) {
@@ -51,7 +55,7 @@ namespace Q42.DbTranslations.Services {
                 CultureInfo cultureInfo = CultureInfo.GetCultureInfo(cultureName);
                 CultureInfo parentCultureInfo = cultureInfo.Parent;
                 if (parentCultureInfo.IsNeutralCulture) {
-                    var culture = LoadCulture(parentCultureInfo.Name);
+                    var culture = _cultureValue.GetOrAdd(parentCultureInfo.Name, LoadCulture);
                     if (culture.Translations.ContainsKey(scopedKey)) {
                         return culture.Translations[scopedKey];
                     }

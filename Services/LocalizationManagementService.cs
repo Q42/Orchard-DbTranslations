@@ -216,15 +216,15 @@ namespace Q42.DbTranslations.Services
                         {
                             translation.Context = line;
                         }
-                        else if (line.StartsWith("#| msgid "))
+                        if (line.StartsWith("#| msgid ") || (string.IsNullOrWhiteSpace(translation.Key) && line.StartsWith("msgid ")))
                         {
                             translation.Key = line;
                         }
-                        else if (line.StartsWith("msgid "))
+                        if (line.StartsWith("msgid "))
                         {
                             translation.English = line;
                         }
-                        else if (line.StartsWith("msgstr "))
+                        if (line.StartsWith("msgstr "))
                         {
                             translation.Translation = line;
                             if (!translations.Contains(translation, comparer))

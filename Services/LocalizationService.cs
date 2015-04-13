@@ -249,34 +249,29 @@ namespace Q42.DbTranslations.Services {
         public IEnumerable<StringEntry> TranslateFile(string path, string content, string culture) {
             string currentContext = null;
             string currentOriginal = null;
-            string currentId = null;
             using (var textStream = new StringReader(content)) {
                 string line;
                 while ((line = textStream.ReadLine()) != null) {
-                    if (line.StartsWith("#: ")) {
-                        currentContext = line.Substring(3);
-                    }
                     if (line.StartsWith("msgctxt ")) {
                         currentContext = line.Substring(8);
                     }
-                    else if (line.StartsWith("#| msgid \"")) {
-                        currentId = ImportPoText(line.Substring(10, line.Length - 11));
-                    }
-                    else if (line.StartsWith("msgid \"")) {
+                    if (line.StartsWith("msgid \"")) {
                         currentOriginal = ImportPoText(line.Substring(7, line.Length - 8));
                     }
-                    else if (line.StartsWith("msgstr \"")) {
-                        var context = currentContext;
+                    
+                    if (line.StartsWith("msgstr \"")) {
                         var translation = ImportPoText(line.Substring(8, line.Length - 9));
                         if (!string.IsNullOrEmpty(translation)) {
                             yield return new StringEntry {
-                                Context = context,
+                                Context = currentContext == null ? null : currentContext.Trim('"'),
                                 Path = path,
                                 Culture = culture,
-                                Key = currentId,
+                                Key = currentOriginal,
                                 English = currentOriginal,
                                 Translation = translation
                             };
+                            currentOriginal = null;
+                            currentContext = null;
                         }
                     }
                 }
@@ -309,9 +304,6 @@ namespace Q42.DbTranslations.Services {
                     StringKey = input.Key,
                     OriginalLanguageString = input.English
                 };
-
-                if (!translatableString.Path.Contains("{0}"))
-                    throw new Exception("Path should contain {0}, but doesn't.\n" + translatableString.Path);
 
                 _localizableStringRepository.Create(translatableString);
             }

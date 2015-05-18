@@ -252,7 +252,7 @@ namespace Q42.DbTranslations.Services {
             using (var textStream = new StringReader(content)) {
                 string line;
                 while ((line = textStream.ReadLine()) != null) {
-                    if (line.StartsWith("msgctxt ")) {
+                    if (line.StartsWith("msgctx ")) {
                         currentContext = line.Substring(8);
                     }
                     if (line.StartsWith("msgid \"")) {

@@ -31,11 +31,11 @@ namespace Q42.DbTranslations.Controllers
         private readonly IHostEnvironment _hostEnvironment;
 
         public AdminController(
-                ILocalizationService localizationService,
-                IOrchardServices services,
-                ILocalizationManagementService managementService,
-                IExtensionManager extensionManager,
-                IHostEnvironment hostEnvironment)
+            ILocalizationService localizationService,
+            IOrchardServices services,
+            ILocalizationManagementService managementService,
+            IExtensionManager extensionManager,
+            IHostEnvironment hostEnvironment)
         {
             _localizationService = localizationService;
             _services = services;
@@ -57,6 +57,7 @@ namespace Q42.DbTranslations.Controllers
                 return RedirectToAction("Import");
             return View(model);
         }
+
         public ActionResult Import()
         {
             if (!_services.Authorizer.Authorize(Permissions.UploadTranslation))
@@ -72,6 +73,7 @@ namespace Q42.DbTranslations.Controllers
                 .OrderBy(e => e.Name);
             return View(model);
         }
+
         public ActionResult Export()
         {
             var model = _localizationService.GetCultures();
@@ -79,6 +81,7 @@ namespace Q42.DbTranslations.Controllers
                 return RedirectToAction("Import");
             return View(model);
         }
+
         public ActionResult Search(string querystring, string culture)
         {
             var cultures = _localizationService.GetCultures();
@@ -158,11 +161,24 @@ namespace Q42.DbTranslations.Controllers
         public ActionResult ImportLiveOrchardPo(string culture)
         {
             IEnumerable<StringEntry> strings;
-            var url = "http://www.orchardproject.net/Localize/download/" + culture;
-            var req = HttpWebRequest.Create(url);
-            using (var stream = req.GetResponse().GetResponseStream())
+            var cultureInfo = CultureInfo.CreateSpecificCulture(culture);
+            const string BaseUrlFormat = "https://crowdin.net/download/project/orchard-cms/{0}.zip";
+            var url = string.Format(BaseUrlFormat, cultureInfo.Name);
+
+            WebResponse response;
+            if (!TryGetResponse(url, out response))
+            {
+                url = string.Format(BaseUrlFormat, cultureInfo.TwoLetterISOLanguageName);
+                if (!TryGetResponse(url, out response))
+                {
+                    _services.Notifier.Error(T("No po zip found for culture '{0}'.", culture));
+                    return RedirectToAction("Import");
+                }
+            }
+
+            using (var stream = response.GetResponseStream())
                 strings = _localizationService.GetTranslationsFromZip(stream).ToList();
-            //return Log(strings);
+
             _localizationService.SaveStringsToDatabase(strings, false);
             _localizationService.ResetCache();
             return RedirectToAction("Import");
@@ -265,7 +281,7 @@ namespace Q42.DbTranslations.Controllers
             _localizationService.ResetCache();
             return RedirectToAction("Import");
         }
-        
+
         public ActionResult FromFeature(string culture, string path, string type)
         {
             if (String.IsNullOrEmpty(path) || String.IsNullOrEmpty(type))
@@ -288,6 +304,21 @@ namespace Q42.DbTranslations.Controllers
 
             _localizationService.ResetCache();
             return RedirectToAction("Import");
+        }
+
+        private static bool TryGetResponse(string url, out WebResponse response)
+        {
+            try
+            {
+                var req = HttpWebRequest.Create(url);
+                response = req.GetResponse();
+                return true;
+            }
+            catch (WebException)
+            {
+                response = null;
+                return false;
+            }
         }
     }
 }

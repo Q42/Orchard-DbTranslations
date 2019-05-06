@@ -99,7 +99,7 @@ namespace Q42.DbTranslations.Controllers
 
         public ActionResult Extra(string moduleName = "")
         {
-            if (!Services.Authorizer.Authorize(Permissions.UploadTranslation))
+            if (!_services.Authorizer.Authorize(Permissions.UploadTranslation))
                 return RedirectToAction("Index");
             ViewBag.selectedModule = "";
             if (moduleName != "")
@@ -351,13 +351,13 @@ namespace Q42.DbTranslations.Controllers
         public ActionResult FromAssembly(string referencedAssemblyName, string selectedModule)
         {
             //do stuff to get translations
-            var translations = ManagementService.ExtractTranslationsFromAssembly(referencedAssemblyName, selectedModule);
+            var translations = _managementService.ExtractTranslationsFromAssembly(referencedAssemblyName, selectedModule);
 
             //Save the strings to the database
             _localizationService.SaveStringsToDatabase(translations, false);
 
             //do the notifier thing
-            Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count()));
+            _services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count()));
 
             //Reset Cache
             _localizationService.ResetCache();

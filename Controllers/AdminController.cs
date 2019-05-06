@@ -97,6 +97,31 @@ namespace Q42.DbTranslations.Controllers
             return View(cultures);
         }
 
+        public ActionResult Extra(string moduleName = "")
+        {
+            if (!Services.Authorizer.Authorize(Permissions.UploadTranslation))
+                return RedirectToAction("Index");
+            ViewBag.selectedModule = "";
+            if (moduleName != "")
+            {
+                ViewBag.selectedModule = moduleName;
+                var selectedAssembly = AppDomain.CurrentDomain.GetAssemblies().Where(item => item.FullName.Contains(moduleName)).FirstOrDefault();
+
+                if (selectedAssembly != null)
+                {
+                    ViewBag.Assemblies = selectedAssembly.GetReferencedAssemblies().OrderBy(e => e.Name);
+                    
+                }
+            }
+
+            var extensions = _extensionManager.AvailableExtensions();
+            ViewBag.Modules = extensions
+                .Where(e => DefaultExtensionTypes.IsModule(e.ExtensionType))
+                .OrderBy(e => e.Name);
+
+            return View();
+        }
+
         public ActionResult Culture(string culture)
         {
             if (culture == null) throw new HttpException(404, "Not found");
@@ -306,6 +331,7 @@ namespace Q42.DbTranslations.Controllers
             return RedirectToAction("Import");
         }
 
+
         private static bool TryGetResponse(string url, out WebResponse response)
         {
             try
@@ -319,6 +345,25 @@ namespace Q42.DbTranslations.Controllers
                 response = null;
                 return false;
             }
+        }
+
+        // pull merged from https://github.com/LievenVandeperre/Orchard-DbTranslations
+        public ActionResult FromAssembly(string referencedAssemblyName, string selectedModule)
+        {
+            //do stuff to get translations
+            var translations = ManagementService.ExtractTranslationsFromAssembly(referencedAssemblyName, selectedModule);
+
+            //Save the strings to the database
+            _localizationService.SaveStringsToDatabase(translations, false);
+
+            //do the notifier thing
+            Services.Notifier.Add(NotifyType.Information, T("Imported {0} translatable strings", translations.Count()));
+
+            //Reset Cache
+            _localizationService.ResetCache();
+            //do the redirect
+            return RedirectToAction("Extra");
+
         }
     }
 }

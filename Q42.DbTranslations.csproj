@@ -102,6 +102,7 @@
     <Content Include="Views\Admin\Culture.cshtml" />
     <Content Include="Views\Admin\Details.cshtml" />
     <Content Include="Views\Admin\Index.cshtml" />
+    <Content Include="Views\Admin\Extra.cshtml" />
     <Content Include="Content\form-invalid.gif" />
     <Content Include="Content\form-valid.gif" />
     <Content Include="Content\icon_download.png" />

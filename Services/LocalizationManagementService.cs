@@ -8,6 +8,8 @@ using Fluent.Zip;
 using Orchard;
 using Q42.DbTranslations.Models;
 using Path = Fluent.IO.Path;
+using System.ComponentModel.DataAnnotations;
+using Orchard.Localization;
 
 namespace Q42.DbTranslations.Services
 {
@@ -16,6 +18,7 @@ namespace Q42.DbTranslations.Services
         void InstallTranslation(byte[] zippedTranslation, string sitePath);
         byte[] PackageTranslations(string cultureCode, string sitePath);
         IEnumerable<StringEntry> ExtractDefaultTranslation(string sitePath, string targetSitePath);
+        IEnumerable<StringEntry> ExtractTranslationsFromAssembly(string assemblyName, string moduleName);
         void SyncTranslation(string sitePath, string cultureCode);
     }
 
@@ -74,6 +77,59 @@ namespace Q42.DbTranslations.Services
                 translationFiles,
                 p => site.Combine(p).ReadBytes());
         }
+
+        /// <summary>
+        /// This method goes through a selected assembly to get all data-Annotations (validation) for that assembly. 
+        /// </summary>
+        /// <param name="assemblyName">The name (not fullname) of the referenced Assembly</param>
+        /// <param name="moduleName">The name (not fullname) of the module where the keys are needed</param>
+        /// <returns>A list of StringEntries to be instered into the Q42 DB</returns>
+        public IEnumerable<StringEntry> ExtractTranslationsFromAssembly(string assemblyName, string moduleName)
+        {
+            var result = new List<StringEntry>();
+
+            var stringList = new List<string>();
+            //declarations
+            var referencedAssembly = AppDomain.CurrentDomain.GetAssemblies().Where(e => e.FullName.Contains(assemblyName)).FirstOrDefault();
+            var annotationList = new List<string> {"Required", "RegularExpression", "Range", "StringLength" };
+            var path = GetModuleLocalizationPath(null, moduleName).Replace('\\', '/');
+
+            //Get the Data-Annotations Error Msgs for the Assembly using Reflection
+            if(referencedAssembly != null){
+            var Types = referencedAssembly.GetTypes();
+            foreach (var t in Types)
+            {
+                var properties = t.GetProperties();
+                foreach (var propertyInfo in properties)
+                {
+                    foreach (var customAttr in propertyInfo.GetCustomAttributesData())
+                    {
+                       if(annotationList.Any(customAttr.Constructor.DeclaringType.Name.Contains))
+                       {
+                           var firstOrDefault = customAttr.NamedArguments.Where(i => i.MemberInfo.Name.ToString() == "ErrorMessage").Select(i => i.TypedValue.Value).FirstOrDefault();
+                           if (firstOrDefault != null)
+                           {
+                               var key = (firstOrDefault.ToString()
+                                         );
+                               result.Add(new StringEntry
+                                              {
+                                                  Culture = null,
+                                                  Context = customAttr.Constructor.DeclaringType.FullName,
+                                                  Key = key,
+                                                  English = key,
+                                                  Translation = key,
+                                                  Path = path
+                                              });
+                           }
+                       }
+                    }
+                }
+            }
+            }
+
+            //done --> return result
+            return result;
+        } 
 
         public IEnumerable<StringEntry> ExtractDefaultTranslation(string sitePath, string targetSitePath)
         {
@@ -164,9 +220,8 @@ namespace Q42.DbTranslations.Services
                             foreach (var englishTranslation in englishTranslations)
                             {
                                 var entry = englishTranslation;
-                                var translation = translations.Where(
-                                    t => t.Context == entry.Context &&
-                                         t.Key == entry.Key).FirstOrDefault();
+                                var translation = translations.FirstOrDefault(t => t.Context == entry.Context &&
+                                                                                   t.Key == entry.Key);
                                 if (translation == default(StringEntry) ||
                                     translation.Translation == null ||
                                     translation.Translation.Equals(@"msgstr """""))
@@ -217,15 +272,15 @@ namespace Q42.DbTranslations.Services
                         {
                             translation.Context = line;
                         }
-                        else if (line.StartsWith("#| msgid "))
+                        if (line.StartsWith("#| msgid ") || (string.IsNullOrWhiteSpace(translation.Key) && line.StartsWith("msgid ")))
                         {
                             translation.Key = line;
                         }
-                        else if (line.StartsWith("msgid "))
+                        if (line.StartsWith("msgid "))
                         {
                             translation.English = line;
                         }
-                        else if (line.StartsWith("msgstr "))
+                        if (line.StartsWith("msgstr "))
                         {
                             translation.Translation = line;
                             if (!translations.Contains(translation, comparer))

@@ -65,14 +65,13 @@
     <p>@T("Or a theme:")</p>
     <p>
         <form action="@Url.Action("FromFeature")" method="get">
-            <input type="hidden" name="type" value="theme" />
+            <input type="hidden" name="type" value="theme"/>
             <select id="themes" name="path">
-                @foreach (var theme in ViewBag.Themes)
-                {
+                @foreach (var theme in ViewBag.Themes) {
                     <option value="@theme.Path">@theme.Name</option>
                 }
             </select>
-            <input type="submit" class="button" name="submit" value="@T("Go")" />
+            <input type="submit" class="button" name="submit" value="@T("Go")"/>
         </form>
     </p>
 </div>

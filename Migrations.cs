@@ -42,11 +42,11 @@ namespace Q42.DbTranslations
               "LocalizableStringRecord_Id"));
       return 1;
     }
-    public int UpdateFrom1()
-    {
-        SchemaBuilder.ExecuteSql(@"DELETE FROM Q42_DbTranslations_LocalizableStringRecord WHERE [Path] LIKE '%_Backup%' OR Context LIKE '%_Backup%'");
-        return 2;
-    }
+    //public int UpdateFrom1()
+    //{
+    //    SchemaBuilder.ExecuteSql(@"DELETE FROM Q42_DbTranslations_LocalizableStringRecord WHERE [Path] LIKE '%_Backup%' OR Context LIKE '%_Backup%'");
+    //    return 2;
+    //}
 
   }
 }

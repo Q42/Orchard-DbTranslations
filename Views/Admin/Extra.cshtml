@@ -1,0 +1,49 @@
+﻿@using System.Globalization
+
+@{
+  Layout.Title = "Database translations";
+}
+
+
+<div class="content">
+    <h2>@T("Generate from referenced Assemblies")</h2>
+    <p>@T("This will get the translation keys for DataAnnotations from the referenced Assemblies. Select the module, then select the referenced Assembly you want to parse")</p>
+    <p>
+        <form action="@Url.Action("Extra")" method="get">
+            <select id="modules" name="moduleName">
+                @foreach (var module in ViewBag.Modules)
+                {
+                    if(module.Name == ViewBag.selectedModule)
+                     {
+                      <option value="@module.Name" selected="selected">@module.Name</option>   
+                     }
+                    else
+                    {
+                        <option value="@module.Name">@module.Name</option>
+                    }
+                }
+            </select>
+            <input type="submit" class="button" name="submit" value="@T("Get Assemblies")" />
+        </form>
+    </p>
+    @{
+        if (ViewBag.Assemblies != null)
+        {
+            <p>
+                <form action="@Url.Action("FromAssembly")" method="get">
+                    <input type="hidden" name="selectedModule" value="@ViewBag.selectedModule"/>
+                    <select id="modules" name="referencedAssemblyName">
+                        @foreach (var assemblyName in ViewBag.Assemblies)
+                        {
+                            <option value="@assemblyName.Name">@assemblyName.Name</option>
+                        }
+                    </select>
+                    <input type="submit" class="button" name="submit" value="@T("Get keys from Assembly")" />
+                </form>
+            </p>
+        }
+    }
+    
+</div>
+<p>&nbsp;</p>
+  
